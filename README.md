@@ -1,5 +1,7 @@
 # BIMA DuctDesigner — white-label duct configurator
 
+**DEMO : https://duct-designer-drag-drop.vercel.app/?app=builder**
+
 Browser-based dust-extraction planner for woodworking shops: drag pipes and fittings
 onto a scaled floor plan, get a live-priced bill of materials from the product
 catalogue, send quote requests and share designs via link. Machine dealers can embed
