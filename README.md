@@ -1,10 +1,10 @@
 # 💨 BIMA DuctDesigner — Dust Extraction Planner
 
-**DEMO : https://duct-designer-drag-drop.vercel.app/?app=builder**
+**Live demo:** [duct-designer-drag-drop.vercel.app/?app=builder](https://duct-designer-drag-drop.vercel.app/?app=builder) · [sample design](https://duct-designer-drag-drop.vercel.app/?design=demo)
 
 ![BIMA DuctDesigner — drag & drop duct planning with live priced BOM](.github/assets/banner.png)
 
-![CI](https://github.com/rajkdas/bima-ductdesigner/actions/workflows/ci.yml/badge.svg)](https://github.com/rajkdas/bima-ductdesigner/actions/workflows/ci.yml)
+[![CI](https://github.com/rajkdas/duct-designer-drag-drop/actions/workflows/ci.yml/badge.svg)](https://github.com/rajkdas/duct-designer-drag-drop/actions/workflows/ci.yml)
 ![Version](https://img.shields.io/badge/version-0.2.1-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Node](https://img.shields.io/badge/Node-20%2B%20%7C%2022-339933?logo=nodedotjs&logoColor=white)
@@ -97,8 +97,8 @@ PLANNER (/?app=builder)               LIVE COMMERCE
 1. Clone and install (the `postinstall` hook runs `prisma generate` automatically):
 
    ```bash
-   git clone https://github.com/rajkdas/bima-ductdesigner.git
-   cd bima-ductdesigner
+   git clone https://github.com/rajkdas/duct-designer-drag-drop.git
+   cd duct-designer-drag-drop
    npm install
    ```
 
@@ -250,4 +250,4 @@ affiliated with or endorsed by them.
 ---
 
 Built and maintained by **Raj Kumar Das**. Bug reports and pull requests are
-welcome at <https://github.com/rajkdas/bima-ductdesigner/issues>.
+welcome at <https://github.com/rajkdas/duct-designer-drag-drop/issues>.
