@@ -4,7 +4,7 @@
 
 ![BIMA DuctDesigner — drag & drop duct planning with live priced BOM](.github/assets/banner.png)
 
-[![CI](https://github.com/rajkdas/bima-ductdesigner/actions/workflows/ci.yml/badge.svg)](https://github.com/rajkdas/bima-ductdesigner/actions/workflows/ci.yml)
+![CI](https://github.com/rajkdas/bima-ductdesigner/actions/workflows/ci.yml/badge.svg)](https://github.com/rajkdas/bima-ductdesigner/actions/workflows/ci.yml)
 ![Version](https://img.shields.io/badge/version-0.2.1-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Node](https://img.shields.io/badge/Node-20%2B%20%7C%2022-339933?logo=nodedotjs&logoColor=white)
