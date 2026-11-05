@@ -1,0 +1,90 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Catalog of duct parts & units. Prices in shop currency.
+// Kept in sync with WooCommerce (match by SKU) via /api/products/sync.
+model Product {
+  id             String   @id @default(cuid())
+  sku            String   @unique
+  name           String
+  description    String?
+  category       String // PIPE | BEND | YBRANCH | TBRANCH | REDUCER | GATE | COUPLING | CAP | FLEX | HOOD | UNIT
+  diameterMm     Int      @default(200)
+  diameter2Mm    Int? // reducer / Y-branch branch diameter
+  lengthMm       Int? // pipe / flex length
+  angleDeg       Float? // bend angle
+  branchAngleDeg Float? // Y/T branch take-off angle
+  price          Float
+  stock          Int?
+  active         Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  wooId          Int? // WooCommerce product id (set by sync)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// Dealer licences for the white-label configurator.
+model Dealer {
+  id           String   @id @default(cuid())
+  slug         String   @unique // used for embed ?dealer=slug and subdomain slug.domain.com
+  name         String
+  contactEmail String?
+  monthlyFee   Float    @default(49)
+  brandColor   String   @default("#ea580c")
+  status       String   @default("ACTIVE") // ACTIVE | TRIAL | SUSPENDED
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Saved layouts. data = JSON { v, room, items[] }
+model Design {
+  id         String         @id @default(cuid())
+  shareId    String         @unique
+  name       String         @default("Untitled layout")
+  customer   String?
+  dealerSlug String? // white-label context the design was created in
+  dealerName String?
+  data       String
+  totalNet   Float          @default(0)
+  totalGross Float          @default(0)
+  itemCount  Int            @default(0)
+  quotes     QuoteRequest[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model QuoteRequest {
+  id         String   @id @default(cuid())
+  designId   String?
+  design     Design?  @relation(fields: [designId], references: [id])
+  dealerSlug String?
+  dealerName String?
+  name       String
+  company    String?
+  email      String
+  phone      String?
+  message    String?
+  totalGross Float    @default(0)
+  status     String   @default("NEW") // NEW | IN_PROGRESS | QUOTED | CLOSED
+  createdAt  DateTime @default(now())
+}
+
+// Single-row shop settings (id = "main")
+model Settings {
+  id           String   @id @default("main")
+  shopName     String   @default("BIMA Absaugtechnik")
+  tagline      String   @default("Dust extraction systems for professional workshops")
+  currency     String   @default("EUR")
+  vatRate      Float    @default(19)
+  brandColor   String   @default("#ea580c")
+  contactEmail String   @default("sales@example.com")
+  updatedAt    DateTime @updatedAt
+}
