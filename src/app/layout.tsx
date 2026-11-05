@@ -18,9 +18,8 @@ export const metadata: Metadata = {
   description:
     "Plan dust extraction systems in the browser: drag & drop pipes and fittings, get a live priced bill of materials, request a quote or share the design with any dealer.",
   keywords: ["dust extraction", "duct design", "woodworking", "configurator", "Späneabsaugung", "Rohrplaner"],
-  icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
-  },
+  // Favicon comes from the App Router file conventions:
+  //   src/app/favicon.ico · src/app/icon.svg · src/app/apple-icon.png
   openGraph: {
     title: "BIMA DuctDesigner",
     description: "Drag & drop duct planner with live priced bill of materials",

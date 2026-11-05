@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- BIMA DuctDesigner — favicon mark (scale-robust: no filters) -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#082f3a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- pipe: dark wall + cyan bore -->
+  <path d="M 96 336 H 344 V 96" fill="none" stroke="#0f202c" stroke-width="118"
+        stroke-linejoin="round"/>
+  <path d="M 96 336 H 344 V 96" fill="none" stroke="#22d3ee" stroke-width="74"
+        stroke-linejoin="round"/>
+
+  <!-- flange caps -->
+  <g fill="#d2f5fc">
+    <rect x="60" y="272" width="30" height="128" rx="15"/>
+    <rect x="280" y="60" width="128" height="30" rx="15"/>
+  </g>
+</svg>
