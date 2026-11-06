@@ -142,8 +142,11 @@ export function IsoView({ compact = false }: { compact?: boolean }) {
     a.camera.position.set(W / 2 + dist * 0.75, dist * 0.6, D / 2 + dist * 0.75)
     a.controls.target.set(W / 2, 0.9, D / 2)
   }
-  const rebuildRef = useRef(rebuild)
-  rebuildRef.current = rebuild
+	const rebuildRef = useRef(rebuild)
+
+	useEffect(() => {
+	  rebuildRef.current = rebuild
+	})
 
   // --- init once (dynamic import => client-only, code-split chunk) --------
   useEffect(() => {
