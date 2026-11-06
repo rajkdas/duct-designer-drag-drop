@@ -2,18 +2,25 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PPM, useBuilder } from '@/lib/store'
-import { footprint, localPorts, worldPorts, type PartGeo } from '@/lib/geo'
-import { formatM, type PlacedItem } from '@/lib/types'
-import { PartDefs, PartShape } from './PartShape'
-import { Minus, Plus } from 'lucide-react'
+import { footprint, localPorts, worldPorts } from '@/lib/geo'
+import type { PlacedItem } from '@/lib/types'
+import { PartShape, centerlineSamples } from './PartShape'
+import { Plus, Minus } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
-// Interactive 2D top-view canvas (SVG). 1 unit = 1 metre inside the world
-// group; pan/zoom via pointer + wheel. Supports drag-from-palette placement,
-// item dragging with port snapping, rotation handles and pinch zoom.
+// Interactive 2D top-view canvas (SVG) in approved CAD style: graph grid,
+// double-line walls with poché + door swing, dimension lines, double-line
+// duct channels with blue joint dots and take-off markers, light-blue
+// machine plates. All geometry stays store-driven (live sync).
 // ---------------------------------------------------------------------------
 
 const SNAP_ANG = 22.5
+const WALL_T = 0.12 // wall thickness (m)
+const DUCT_OUT = '#8b95a5'
+const DUCT_IN = '#ffffff'
+const FLEX_IN = '#f6ead8'
+const PLATE_FILL = '#dce6f4'
+const PLATE_STROKE = '#64748b'
 
 export function screenToWorld(clientX: number, clientY: number, rect: DOMRect, zoom: number, pan: { x: number; y: number }) {
   const k = PPM * zoom
@@ -26,6 +33,84 @@ type DragState =
   | { mode: 'rotate'; id: string; startAngle: number; startRot: number }
   | { mode: 'pinch'; p1: number; p2: number; dist: number; mid: { x: number; y: number }; zoom: number; pan: { x: number; y: number } }
   | null
+
+/** double-line duct channel drawn from the part centreline */
+function DuctShape({ geo, brand }: { geo: ReturnType<typeof useBuilder.getState> extends never ? never : any; brand: string }) {
+  const samples = centerlineSamples(geo)
+  const inner = geo.category === 'FLEX' ? FLEX_IN : DUCT_IN
+  return (
+    <g>
+      {samples.map((seg: { pts: { x: number; y: number }[]; width: number }, i: number) => {
+        const d = seg.pts.map((p, idx) => `${idx ? 'L' : 'M'}${p.x} ${p.y}`).join(' ')
+        const ticks: React.ReactNode[] = []
+        for (let j = 0; j < seg.pts.length; j++) {
+          const a = seg.pts[Math.max(0, j - 1)]
+          const b = seg.pts[Math.min(seg.pts.length - 1, j + 1)]
+          const vx = b.x - a.x
+          const vy = b.y - a.y
+          const len = Math.hypot(vx, vy) || 1
+          const px = -vy / len
+          const py = vx / len
+          const h = seg.width / 2 + 0.02
+          const p = seg.pts[j]
+          ticks.push(
+            <line key={j} x1={p.x - px * h} y1={p.y - py * h} x2={p.x + px * h} y2={p.y + py * h} stroke={DUCT_OUT} strokeWidth={0.02} />
+          )
+        }
+        return (
+          <g key={i}>
+            <path d={d} fill="none" stroke={DUCT_OUT} strokeWidth={seg.width + 0.035} />
+            <path d={d} fill="none" stroke={inner} strokeWidth={seg.width} />
+            {geo.category === 'FLEX' && <path d={d} fill="none" stroke="#b8a48f" strokeWidth={seg.width} strokeDasharray="0.18 0.14" opacity={0.35} />}
+            {ticks}
+          </g>
+        )
+      })}
+      {void brand}
+    </g>
+  )
+}
+
+/** light-blue machine / unit plate with schematic internal detail */
+function PlateShape({ geo, sku, brand }: { geo: any; sku?: string; brand: string }) {
+  const fp = footprint(geo, sku)
+  const isUnit = geo.category === 'UNIT'
+  const type: string = geo.machineType ?? 'misc'
+  const { ox, oy, w, h } = fp
+  const s = PLATE_STROKE
+  const detail = () => {
+    const ln = (x1: number, y1: number, x2: number, y2: number) => <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={s} strokeWidth={0.015} />
+    switch (type) {
+      case 'table-saw':
+        return (
+          <g fill="none">
+            {ln(ox, oy + h * 0.35, ox + w, oy + h * 0.35)}
+            <rect x={ox + w * 0.08} y={oy + h * 0.5} width={w * 0.26} height={h * 0.36} stroke={s} strokeWidth={0.015} />
+            <circle cx={ox + w * 0.7} cy={oy + h * 0.2} r={Math.min(w, h) * 0.1} stroke={s} strokeWidth={0.015} />
+          </g>
+        )
+      case 'planer':
+      case 'jointer':
+      case 'wide-belt':
+        return <g fill="none">{ln(ox + w * 0.3, oy, ox + w * 0.3, oy + h)}{ln(ox + w * 0.8, oy, ox + w * 0.8, oy + h)}</g>
+      case 'edge-bander':
+        return <g fill="none">{ln(ox + w * 0.15, oy, ox + w * 0.15, oy + h)}</g>
+      case 'cnc':
+        return <g fill="none">{ln(ox + w * 0.35, oy + h * 0.3, ox + w * 0.65, oy + h * 0.7)}{ln(ox + w * 0.65, oy + h * 0.3, ox + w * 0.35, oy + h * 0.7)}</g>
+      default:
+        return <g fill="none">{ln(ox + w * 0.25, oy + h * 0.25, ox + w * 0.75, oy + h * 0.75)}</g>
+    }
+  }
+  const port = localPorts(geo, sku)[0]
+  return (
+    <g>
+      <rect x={ox} y={oy} width={w} height={h} rx={0.04} fill={isUnit ? '#fde8dd' : PLATE_FILL} stroke={isUnit ? brand : PLATE_STROKE} strokeWidth={0.025} />
+      {!isUnit && detail()}
+      {isUnit && <rect x={ox + w * 0.3} y={oy + h * 0.25} width={w * 0.4} height={h * 0.5} fill="none" stroke={brand} strokeWidth={0.02} />}
+      {port && <rect x={port.x - 0.05} y={port.y - 0.04} width={0.1} height={0.08} fill={brand} />}
+    </g>
+  )
+}
 
 export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
   const svgRef = useRef<SVGSVGElement>(null)
@@ -54,35 +139,28 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
   const zoomBy = useBuilder((s) => s.zoomBy)
   const setZoom = useBuilder((s) => s.setZoom)
   const setLiveSnap = useBuilder((s) => s.setLiveSnap)
+  const clearAll = useBuilder((s) => s.clearAll)
 
   const k = PPM * zoom
   const brand = useBuilder((s) => s.settings.brandColor)
 
-  // --- sizing ---------------------------------------------------------------
   useEffect(() => {
     const el = svgRef.current?.parentElement
     if (!el) return
-    // ResizeObserver fires once on observe() with the initial size
     const ro = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight }))
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
 
-  // auto-fit whenever the viewport size changes — until the user takes
-  // control with a manual pan/zoom (keeps the room centred through layout
-  // shifts like the 2D/3D split resolving after mount)
-  const interacted = useRef(false)
+  const didFit = useRef(false)
   useEffect(() => {
-    if (interacted.current || size.w < 50) return
-    const z = Math.min((size.w - 120) / room.w, (size.h - 110) / room.h) / PPM
+    if (didFit.current || size.w < 50) return
+    didFit.current = true
+    const z = Math.min((size.w - 90) / room.w, (size.h - 70) / room.h) / PPM
     setZoom(Math.max(0.25, Math.min(2, z)))
     setPan({ x: (size.w - room.w * PPM * z) / 2, y: (size.h - room.h * PPM * z) / 2 })
   }, [size, room, setPan, setZoom])
-  const markInteracted = () => {
-    interacted.current = true
-  }
 
-  // --- derived geometry -------------------------------------------------------
   const itemsGeo = useMemo(() => items.map((it) => ({ item: it, geo: geoOf(it) })), [items, geoOf])
 
   const joints = useMemo(() => {
@@ -103,7 +181,6 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     return pts
   }, [itemsGeo])
 
-  // --- grid -------------------------------------------------------------------
   const grid = useMemo(() => {
     const w0 = -pan.x / k
     const w1 = (size.w - pan.x) / k
@@ -115,11 +192,9 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     const major: number[] = []
     for (let x = Math.floor(w0 / step) * step; x <= w1; x += step) (Math.abs(x % 1) < 1e-6 ? major : minor).push(x)
     for (let y = Math.floor(h0 / step) * step; y <= h1; y += step) (Math.abs(y % 1) < 1e-6 ? major : minor).push(y)
-    const labelStep = k >= 34 ? 1 : k >= 17 ? 2 : 5
-    return { minor, major, labelStep, w0, w1, h0, h1 }
+    return { minor, major, w0, w1, h0, h1 }
   }, [pan, k, size])
 
-  // --- pointer handling ---------------------------------------------------------
   const toWorld = useCallback(
     (cx: number, cy: number) => {
       const rect = svgRef.current?.getBoundingClientRect()
@@ -131,7 +206,6 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
 
   const onPointerDownBg = (e: React.PointerEvent) => {
     if (readOnly) {
-      interacted.current = true
       dragRef.current = { mode: 'pan', sx: e.clientX, sy: e.clientY, px: pan.x, py: pan.y }
       ;(e.target as Element).setPointerCapture?.(e.pointerId)
       return
@@ -143,7 +217,6 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
       return
     }
     select(null)
-    markInteracted()
     dragRef.current = { mode: 'pan', sx: e.clientX, sy: e.clientY, px: pan.x, py: pan.y }
     ;(e.currentTarget as Element).setPointerCapture?.(e.pointerId)
   }
@@ -152,9 +225,7 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     if (readOnly || placing) return
     e.stopPropagation()
     if (e.button === 1) return
-    useBuilder.getState().pushHistory() // one undo step per drag
     select(item.id)
-    markInteracted()
     const w = toWorld(e.clientX, e.clientY)
     dragRef.current = { mode: 'item', id: item.id, offX: w.x - item.x, offY: w.y - item.y }
     ;(e.currentTarget as Element).setPointerCapture?.(e.pointerId)
@@ -162,7 +233,6 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
 
   const onRotateDown = (e: React.PointerEvent, item: PlacedItem) => {
     e.stopPropagation()
-    useBuilder.getState().pushHistory() // one undo step per rotation gesture
     const w = toWorld(e.clientX, e.clientY)
     dragRef.current = {
       mode: 'rotate',
@@ -204,13 +274,11 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     setLiveSnap(null)
   }
 
-  // non-passive wheel zoom (React onWheel is passive)
   useEffect(() => {
     const el = svgRef.current
     if (!el) return
     const handler = (e: WheelEvent) => {
       e.preventDefault()
-      interacted.current = true
       const rect = el.getBoundingClientRect()
       const f = e.deltaY < 0 ? 1.12 : 1 / 1.12
       useBuilder.getState().zoomBy(f, e.clientX - rect.left, e.clientY - rect.top)
@@ -219,7 +287,6 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     return () => el.removeEventListener('wheel', handler)
   }, [])
 
-  // pinch zoom (two pointers)
   const trackPointer = (e: React.PointerEvent) => {
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (pointers.current.size === 2 && !dragRef.current) {
@@ -262,7 +329,6 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     return () => window.removeEventListener('pointermove', onMove)
   }, [])
 
-  // cancel placement on Escape
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -274,11 +340,10 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     return () => window.removeEventListener('keydown', h)
   }, [setPlacing])
 
-  // drop from palette anywhere on window
   useEffect(() => {
     if (!placing || readOnly) return
     const up = (e: PointerEvent) => {
-      if (!useBuilder.getState().placing) return // already placed by canvas click
+      if (!useBuilder.getState().placing) return
       const overCanvas = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-canvas]')
       if (overCanvas && svgRef.current) {
         const rect = svgRef.current.getBoundingClientRect()
@@ -292,11 +357,11 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     return () => window.removeEventListener('pointerup', up)
   }, [placing, commitPlace, setPlacing, readOnly])
 
-  // --- render helpers -----------------------------------------------------------
   const renderItem = ({ item, geo }: { item: PlacedItem; geo: ReturnType<typeof geoOf> }) => {
     const selected = item.id === selectedId
     const hovered = item.id === hoverId
     const fp = footprint(geo, item.sku)
+    const isPlate = geo.category === 'MACHINE' || geo.category === 'UNIT'
     return (
       <g
         key={item.id}
@@ -313,32 +378,20 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
             width={fp.w + 0.18}
             height={fp.h + 0.18}
             rx={0.06}
-            fill={selected ? 'rgba(11,51,213,0.05)' : 'transparent'}
+            fill={selected ? 'rgba(37,99,235,0.06)' : 'transparent'}
             stroke={selected ? brand : '#cbd5e1'}
             strokeWidth={selected ? 0.035 : 0.025}
             strokeDasharray={selected ? '0.22 0.14' : undefined}
           />
         )}
-        <PartShape geo={geo} sku={item.sku} />
+        {isPlate ? <PlateShape geo={geo} sku={item.sku} brand={brand} /> : <DuctShape geo={geo} brand={brand} />}
         {selected && !readOnly && (
           <>
-            {/* ports */}
             {localPorts(geo, item.sku).map((p, i) => (
               <circle key={i} cx={p.x} cy={p.y} r={0.06} fill="#fff" stroke="#475569" strokeWidth={0.028} />
             ))}
-            {/* rotate handle */}
-            <g
-              onPointerDown={(e) => onRotateDown(e, item)}
-              style={{ cursor: 'grab' }}
-            >
-              <line
-                x1={fp.ox + fp.w}
-                y1={fp.oy + fp.h / 2}
-                x2={fp.ox + fp.w + 0.35}
-                y2={fp.oy + fp.h / 2}
-                stroke={brand}
-                strokeWidth={0.03}
-              />
+            <g onPointerDown={(e) => onRotateDown(e, item)} style={{ cursor: 'grab' }}>
+              <line x1={fp.ox + fp.w} y1={fp.oy + fp.h / 2} x2={fp.ox + fp.w + 0.35} y2={fp.oy + fp.h / 2} stroke={brand} strokeWidth={0.03} />
               <circle cx={fp.ox + fp.w + 0.35} cy={fp.oy + fp.h / 2} r={0.09} fill="#fff" stroke={brand} strokeWidth={0.035} />
               <circle cx={fp.ox + fp.w + 0.35} cy={fp.oy + fp.h / 2} r={0.035} fill={brand} />
             </g>
@@ -356,7 +409,7 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     const p = products.find((x) => x.id === placing.productId)
     if (!p) return null
     return {
-      category: p.category as PartGeo['category'],
+      category: p.category,
       diameterMm: p.diameterMm,
       diameter2Mm: p.diameter2Mm,
       lengthMm: p.lengthMm,
@@ -368,51 +421,16 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
   const machinesAndUnits = itemsGeo.filter((g) => g.geo.category === 'MACHINE' || g.geo.category === 'UNIT')
   const ducts = itemsGeo.filter((g) => g.geo.category !== 'MACHINE' && g.geo.category !== 'UNIT')
 
-  const snapIndicator = liveSnap // alias for readability below
-  const doorX0 = Math.min(room.w * 0.42, Math.max(1.2, room.w - 2.2))
-  const doorW = Math.min(1.0, room.w * 0.2)
-
-  // --- engineering dimension lines (drawn outside the room, mockup style) -----
-  const dim = (from: { x: number; y: number }, to: { x: number; y: number }, tickDir: { x: number; y: number }, label: string) => {
-    const a = { x: from.x * k + pan.x, y: from.y * k + pan.y }
-    const b = { x: to.x * k + pan.x, y: to.y * k + pan.y }
-    const t = { x: tickDir.x * 5, y: tickDir.y * 5 } // extension tick length (px)
-    const arrow = 5 // arrow head size (px)
-    const ux = (b.x - a.x) / (Math.hypot(b.x - a.x, b.y - a.y) || 1)
-    const uy = (b.y - a.y) / (Math.hypot(b.x - a.x, b.y - a.y) || 1)
-    const mx = (a.x + b.x) / 2
-    const my = (a.y + b.y) / 2
-    return (
-      <g>
-        {/* extension ticks */}
-        <line x1={a.x} y1={a.y} x2={a.x + t.x * 1.6} y2={a.y + t.y * 1.6} stroke="#94a3b8" strokeWidth={1} />
-        <line x1={b.x} y1={b.y} x2={b.x + t.x * 1.6} y2={b.y + t.y * 1.6} stroke="#94a3b8" strokeWidth={1} />
-        {/* dimension line with arrowheads */}
-        <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#64748b" strokeWidth={1} />
-        <polygon points={`${a.x},${a.y} ${a.x + ux * arrow - uy * arrow * 0.55},${a.y + uy * arrow + ux * arrow * 0.55} ${a.x + ux * arrow + uy * arrow * 0.55},${a.y + uy * arrow - ux * arrow * 0.55}`} fill="#64748b" />
-        <polygon points={`${b.x},${b.y} ${b.x - ux * arrow - uy * arrow * 0.55},${b.y - uy * arrow + ux * arrow * 0.55} ${b.x - ux * arrow + uy * arrow * 0.55},${b.y - uy * arrow - ux * arrow * 0.55}`} fill="#64748b" />
-        {/* label */}
-        <text
-          x={mx + (uy !== 0 ? -8 : 0)}
-          y={my - 6}
-          textAnchor="middle"
-          fontSize={11.5}
-          fontWeight={600}
-          fill="#334155"
-          stroke="white"
-          strokeWidth={3.5}
-          paintOrder="stroke"
-          transform={uy !== 0 ? `rotate(-90 ${mx - 8} ${my - 6})` : undefined}
-          style={{ userSelect: 'none', pointerEvents: 'none' }}
-        >
-          {label}
-        </text>
-      </g>
-    )
-  }
+  // door opening (double leaf) at bottom centre
+  const cx = room.w / 2
+  const leaf = 0.5
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-white" data-canvas>
+      <span className="pointer-events-none absolute left-3 top-3 z-10 rounded-md bg-slate-800/90 px-2.5 py-1 text-[11px] font-semibold text-white">
+        2D – Grundriss
+      </span>
+
       <svg
         ref={svgRef}
         className={`h-full w-full touch-none ${placing ? 'cursor-crosshair' : 'cursor-grab'}`}
@@ -425,62 +443,59 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
         role="application"
         aria-label="Duct layout canvas"
       >
-        <PartDefs />
         <g transform={`translate(${pan.x} ${pan.y}) scale(${k})`}>
-          {/* room floor */}
-          <rect x={0} y={0} width={room.w} height={room.h} fill="#fdfefe" />
-          {/* grid */}
+          <rect x={0} y={0} width={room.w} height={room.h} fill="#ffffff" />
+          {/* graph-paper grid */}
           <g>
             {grid.minor.map((v, i) => (
-              <line key={`vm${i}`} x1={v} y1={grid.h0} x2={v} y2={grid.h1} stroke="#eef1f5" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+              <line key={`vm${i}`} x1={v} y1={grid.h0} x2={v} y2={grid.h1} stroke="#eef2f7" strokeWidth={1} vectorEffect="non-scaling-stroke" />
             ))}
             {grid.minor.map((v, i) => (
-              <line key={`hm${i}`} x1={grid.w0} y1={v} x2={grid.w1} y2={v} stroke="#eef1f5" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+              <line key={`hm${i}`} x1={grid.w0} y1={v} x2={grid.w1} y2={v} stroke="#eef2f7" strokeWidth={1} vectorEffect="non-scaling-stroke" />
             ))}
             {grid.major.map((v, i) => (
-              <line key={`vM${i}`} x1={v} y1={grid.h0} x2={v} y2={grid.h1} stroke="#e3e9ef" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+              <line key={`vM${i}`} x1={v} y1={grid.h0} x2={v} y2={grid.h1} stroke="#e2e8f0" strokeWidth={1} vectorEffect="non-scaling-stroke" />
             ))}
             {grid.major.map((v, i) => (
-              <line key={`hM${i}`} x1={grid.w0} y1={v} x2={grid.w1} y2={v} stroke="#e3e9ef" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+              <line key={`hM${i}`} x1={grid.w0} y1={v} x2={grid.w1} y2={v} stroke="#e2e8f0" strokeWidth={1} vectorEffect="non-scaling-stroke" />
             ))}
-          </g>
-          {/* room walls with door opening — vectorEffect must sit on every
-              element: it does NOT inherit from the group */}
-          <g stroke="#7c8ea3" fill="none" strokeLinecap="square">
-            <line x1={0} y1={0} x2={room.w} y2={0} strokeWidth={2.4} vectorEffect="non-scaling-stroke" />
-            <line x1={0} y1={0} x2={0} y2={room.h} strokeWidth={2.4} vectorEffect="non-scaling-stroke" />
-            <line x1={room.w} y1={0} x2={room.w} y2={room.h} strokeWidth={2.4} vectorEffect="non-scaling-stroke" />
-            <line x1={0} y1={room.h} x2={doorX0} y2={room.h} strokeWidth={2.4} vectorEffect="non-scaling-stroke" />
-            <line x1={doorX0 + doorW} y1={room.h} x2={room.w} y2={room.h} strokeWidth={2.4} vectorEffect="non-scaling-stroke" />
-            {/* door jambs + swing arc */}
-            <g stroke="#a9b7c6">
-              <line x1={doorX0} y1={room.h} x2={doorX0} y2={room.h - 0.22} strokeWidth={1.2} vectorEffect="non-scaling-stroke" />
-              <line x1={doorX0 + doorW} y1={room.h} x2={doorX0 + doorW} y2={room.h - 0.22} strokeWidth={1.2} vectorEffect="non-scaling-stroke" />
-              <line x1={doorX0} y1={room.h} x2={doorX0} y2={room.h - doorW} strokeWidth={1} vectorEffect="non-scaling-stroke" strokeDasharray="4 3" />
-              <path d={`M ${doorX0} ${room.h - doorW} A ${doorW} ${doorW} 0 0 1 ${doorX0 + doorW} ${room.h}`} strokeWidth={1} vectorEffect="non-scaling-stroke" />
-            </g>
           </g>
 
-          {/* machines & units below ducts */}
+          {/* double-line walls with poché */}
+          <path
+            d={`M0 0 H${room.w} V${room.h} H0 Z M${WALL_T} ${WALL_T} H${room.w - WALL_T} V${room.h - WALL_T} H${WALL_T} Z`}
+            fill="#e2e6eb"
+            fillRule="evenodd"
+            stroke="#8b95a5"
+            strokeWidth={1.2}
+            vectorEffect="non-scaling-stroke"
+          />
+          {/* door opening + swing arcs */}
+          <rect x={cx - leaf} y={room.h - WALL_T - 0.02} width={leaf * 2} height={WALL_T + 0.04} fill="#ffffff" />
+          <line x1={cx - leaf} y1={room.h} x2={cx - leaf} y2={room.h - leaf} stroke="#8b95a5" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+          <path d={`M${cx - leaf} ${room.h - leaf} A${leaf} ${leaf} 0 0 1 ${cx} ${room.h}`} fill="none" stroke="#b6c0cc" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+          <line x1={cx + leaf} y1={room.h} x2={cx + leaf} y2={room.h - leaf} stroke="#8b95a5" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+          <path d={`M${cx + leaf} ${room.h - leaf} A${leaf} ${leaf} 0 0 0 ${cx} ${room.h}`} fill="none" stroke="#b6c0cc" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+
           {machinesAndUnits.map(renderItem)}
           {ducts.map(renderItem)}
 
-          {/* joints */}
+          {/* blue joint dots */}
           {joints.map((j, i) => (
             <circle key={i} cx={j.x} cy={j.y} r={0.055} fill={brand} opacity={0.9} />
           ))}
 
-          {/* snap indicator */}
-          {snapIndicator && (
-            <g>
-              <circle cx={snapIndicator.x} cy={snapIndicator.y} r={0.16} fill="none" stroke={snapIndicator.aligned ? '#16a34a' : '#d97706'} strokeWidth={2.5} strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />
-            </g>
+          {liveSnap && (
+            <circle cx={liveSnap.x} cy={liveSnap.y} r={0.16} fill="none" stroke={liveSnap.aligned ? '#16a34a' : '#d97706'} strokeWidth={2.5} strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />
           )}
 
-          {/* placement ghost */}
           {placing && ghost && ghostGeo && (
             <g transform={`translate(${ghost.x} ${ghost.y})`} opacity={0.6}>
-              <PartShape geo={ghostGeo} sku={placing.kind === 'product' ? products.find((p) => p.id === placing.productId)?.sku : undefined} />
+              {ghostGeo.category === 'MACHINE' ? (
+                <PlateShape geo={ghostGeo} brand={brand} />
+              ) : (
+                <DuctShape geo={ghostGeo} brand={brand} />
+              )}
               {localPorts(ghostGeo, placing.kind === 'product' ? products.find((p) => p.id === placing.productId)?.sku : undefined).map((p, i) => (
                 <circle key={i} cx={p.x} cy={p.y} r={0.06} fill="#fff" stroke="#475569" strokeWidth={0.028} />
               ))}
@@ -488,69 +503,99 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
           )}
         </g>
 
-        {/* screen-space overlay: dimension lines + machine labels */}
+        {/* screen-space overlay: dimensions + machine labels */}
         <g>
-          {dim({ x: 0, y: -0.55 }, { x: room.w, y: -0.55 }, { x: 0, y: -1 }, formatM(room.w))}
-          {dim({ x: -0.55, y: 0 }, { x: -0.55, y: room.h }, { x: -1, y: 0 }, formatM(room.h))}
+          <g stroke="#94a3b8" strokeWidth={1}>
+            <line x1={pan.x} y1={pan.y - 6} x2={pan.x} y2={pan.y - 28} />
+            <line x1={pan.x + room.w * k} y1={pan.y - 6} x2={pan.x + room.w * k} y2={pan.y - 28} />
+            <line x1={pan.x - 6} y1={pan.y} x2={pan.x - 28} y2={pan.y} />
+            <line x1={pan.x - 6} y1={pan.y + room.h * k} x2={pan.x - 28} y2={pan.y + room.h * k} />
+          </g>
+          <g stroke="#64748b" strokeWidth={1}>
+            <line x1={pan.x} y1={pan.y - 22} x2={pan.x + room.w * k} y2={pan.y - 22} />
+            <line x1={pan.x - 22} y1={pan.y} x2={pan.x - 22} y2={pan.y + room.h * k} />
+          </g>
+          <g fill="#64748b">
+            <path d={`M${pan.x} ${pan.y - 22} l10 -3 v6 z`} />
+            <path d={`M${pan.x + room.w * k} ${pan.y - 22} l-10 -3 v6 z`} />
+            <path d={`M${pan.x - 22} ${pan.y} l-3 10 h6 z`} />
+            <path d={`M${pan.x - 22} ${pan.y + room.h * k} l-3 -10 h6 z`} />
+          </g>
+          <text x={pan.x + (room.w * k) / 2} y={pan.y - 30} textAnchor="middle" fontSize={11} fontWeight={600} fill="#475569">
+            {room.w.toFixed(2).replace('.', ',')} m
+          </text>
+          <text
+            x={pan.x - 30}
+            y={pan.y + (room.h * k) / 2}
+            textAnchor="middle"
+            fontSize={11}
+            fontWeight={600}
+            fill="#475569"
+            transform={`rotate(-90 ${pan.x - 30} ${pan.y + (room.h * k) / 2})`}
+          >
+            {room.h.toFixed(2).replace('.', ',')} m
+          </text>
+
           {itemsGeo
-            .filter((g) => (g.geo.category === 'MACHINE' || g.geo.category === 'UNIT') && g.item.label)
+            .filter((g) => (g.geo.category === 'MACHINE' || g.geo.category === 'UNIT') && (g.item.label || g.geo.category === 'MACHINE'))
             .map(({ item, geo }) => {
               const fp = footprint(geo, item.sku)
-              // design places machine labels BELOW the box
-              const lp = { x: (item.x + fp.ox + fp.w / 2) * k + pan.x, y: (item.y + fp.oy + fp.h) * k + pan.y + 14 }
+              const isUnit = geo.category === 'UNIT'
+              const lp = isUnit
+                ? { x: (item.x + fp.ox + fp.w / 2) * k + pan.x, y: (item.y + fp.oy) * k + pan.y - 8 }
+                : { x: (item.x + fp.ox + fp.w / 2) * k + pan.x, y: (item.y + fp.oy + fp.h) * k + pan.y + 14 }
               return (
                 <text
                   key={`ml${item.id}`}
                   x={lp.x}
                   y={lp.y}
                   textAnchor="middle"
-                  fontSize={11.5}
+                  fontSize={11}
                   fontWeight={600}
-                  fill="#47536b"
+                  fill="#334155"
                   stroke="white"
                   strokeWidth={3}
                   paintOrder="stroke"
                   style={{ pointerEvents: 'none', userSelect: 'none' }}
                 >
-                  {item.label}
+                  {item.label ?? (geo.category === 'MACHINE' ? (geo as any).machineType : '')}
                 </text>
               )
             })}
         </g>
       </svg>
 
-      {/* zoom controls — stacked square buttons, design style */}
+      {/* zoom stack (approved UI, bottom-right) */}
       {!readOnly && (
-        <div className="absolute right-3 bottom-3 flex flex-col gap-1.5">
-          <button
-            onClick={() => zoomBy(1.2)}
-            className="dd-card flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition hover:text-[var(--brand)]"
-            aria-label="Vergrößern"
-          >
+        <div className="absolute bottom-3 right-3 z-10 flex flex-col divide-y divide-slate-200 overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+          <button className="flex h-8 w-8 items-center justify-center text-slate-600 hover:bg-slate-50" onClick={() => zoomBy(1.2)} aria-label="Zoom in">
             <Plus className="h-4 w-4" />
           </button>
-          <button
-            onClick={() => zoomBy(1 / 1.2)}
-            className="dd-card flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition hover:text-[var(--brand)]"
-            aria-label="Verkleinern"
-          >
+          <button className="flex h-8 w-8 items-center justify-center text-slate-600 hover:bg-slate-50" onClick={() => zoomBy(1 / 1.2)} aria-label="Zoom out">
             <Minus className="h-4 w-4" />
           </button>
         </div>
       )}
 
-      {/* hints */}
       {items.length === 0 && !readOnly && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="dd-card max-w-xs p-5 text-center text-sm text-slate-500">
-            <p className="font-semibold text-slate-700">Layout starten</p>
-            <p className="mt-1">
-              Teil aus dem Katalog hierher ziehen — oder Teil in der Bibliothek antippen und auf die Zeichenfläche klicken. Anschlüsse rasten automatisch ein.
-            </p>
+          <div className="max-w-xs rounded-xl border border-dashed border-slate-300 bg-white/85 p-5 text-center text-sm text-slate-500">
+            <p className="font-medium text-slate-700">Start your layout</p>
+            <p className="mt-1">Drag a part from the library, or tap a part once and then click the canvas. Ports snap together automatically.</p>
           </div>
         </div>
       )}
-      {readOnly && <div className="pointer-events-none absolute right-3 bottom-3 rounded-md border border-slate-200 bg-white/90 px-2 py-1 text-[10px] font-medium tracking-wide text-slate-400 uppercase">Nur-Ansicht</div>}
+      {!readOnly && items.length > 0 && (
+        <button
+          onClick={() => {
+            if (confirm('Remove all parts from the layout?')) clearAll()
+          }}
+          className="absolute right-3 top-3 rounded-md border border-slate-200 bg-white/90 px-2.5 py-1.5 text-xs text-slate-500 shadow-sm transition hover:border-red-200 hover:text-red-600"
+        >
+          Clear layout
+        </button>
+      )}
+      {readOnly && <div className="pointer-events-none absolute right-3 bottom-3 rounded-md border border-slate-200 bg-white/90 px-2 py-1 text-[10px] font-medium tracking-wide text-slate-400 uppercase">Read-only view</div>}
     </div>
   )
 }
@@ -562,7 +607,7 @@ export function fitToRoom() {
   if (!el) return
   const w = el.clientWidth
   const h = el.clientHeight
-  const z = Math.max(0.25, Math.min(2, Math.min((w - 120) / s.room.w, (h - 110) / s.room.h) / PPM))
+  const z = Math.max(0.25, Math.min(2, Math.min((w - 90) / s.room.w, (h - 70) / s.room.h) / PPM))
   s.setZoom(z)
   s.setPan({ x: (w - s.room.w * PPM * z) / 2, y: (h - s.room.h * PPM * z) / 2 })
 }
