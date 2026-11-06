@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-11-06
+
+### Added
+- **Realistic 3D view** — lazy-loaded Three.js scene (client-only code-split chunk):
+  PBR metal ducts with flange rings, ribbed flex hoses, machine bodies, room shell
+  with windows and ceiling beams, PCF soft shadows, environment lighting and ACES
+  tone mapping; orbit controls. The scene graph rebuilds from the plan store, so
+  2D and 3D stay in sync on every place / move / rotate / height change.
+- **CAD-grade 2D plan rendering** — graph-paper grid, double-line walls with poché
+  and double-leaf door swing, engineering dimension lines with arrowheads,
+  double-line duct channels with flange ticks, blue joint dots and take-off
+  markers, light-blue machine plates with schematic internals and labels.
+- Dependency `three` (dynamic import) + `@types/three` (dev).
+
+### Changed
+- View header chips and zoom/fit controls are owned solely by the workspace shell;
+  canvas components no longer render their own overlays.
+- README features, requirements, tech-stack and architecture updated for the
+  WebGL 3D view; Vercel install-command note for lockfile-free dependency adds.
+
+### Fixed
+- Doubled "2D – Grundriss" / "3D – Ansicht" chips and duplicated zoom stacks
+  (rendered by both the workspace shell and the canvas components).
+
+[0.3.1]: https://github.com/rajkdas/duct-designer-drag-drop/releases/tag/v0.3.1
+
 ## [0.3.0] - 2026-11-06
 
 ### Changed

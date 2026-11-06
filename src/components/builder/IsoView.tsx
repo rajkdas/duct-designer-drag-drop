@@ -238,9 +238,7 @@ export function IsoView({ compact = false }: { compact?: boolean }) {
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#e8ebf0]">
       <div ref={hostRef} className="h-full w-full" />
-      <span className="pointer-events-none absolute left-3 top-3 z-10 rounded-md bg-slate-800/90 px-2.5 py-1 text-[11px] font-semibold text-white">
-        3D – Ansicht
-      </span>
+      
       <button
         className="absolute bottom-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-slate-50"
         title="Isometrische Vorschau"

@@ -427,10 +427,7 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-white" data-canvas>
-      <span className="pointer-events-none absolute left-3 top-3 z-10 rounded-md bg-slate-800/90 px-2.5 py-1 text-[11px] font-semibold text-white">
-        2D – Grundriss
-      </span>
-
+      
       <svg
         ref={svgRef}
         className={`h-full w-full touch-none ${placing ? 'cursor-crosshair' : 'cursor-grab'}`}
