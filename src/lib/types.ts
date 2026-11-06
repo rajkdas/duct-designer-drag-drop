@@ -3,7 +3,7 @@ export interface ProductDTO {
   sku: string
   name: string
   description: string | null
-  category: string
+  category: PartCategory
   diameterMm: number
   diameter2Mm: number | null
   lengthMm: number | null
@@ -37,9 +37,12 @@ export interface SettingsDTO {
   contactEmail: string
 }
 
+import type { PartCategory } from './geo'
+
 export interface QuoteDTO {
   id: string
   designId: string | null
+  designShareId?: string | null
   designName?: string | null
   dealerSlug: string | null
   dealerName: string | null
@@ -103,6 +106,8 @@ export interface BomRow {
   name: string
   description: string | null
   category: string
+  diameterMm: number | null
+  lengthMm: number | null
   qty: number
   unitPrice: number
   total: number
@@ -129,6 +134,8 @@ export function aggregateBom(items: PlacedItem[], products: ProductDTO[]): BomRo
       name: p.name,
       description: p.description,
       category: p.category,
+      diameterMm: p.diameterMm,
+      lengthMm: p.lengthMm,
       qty: 0,
       unitPrice: p.price,
       total: 0,
@@ -164,7 +171,7 @@ export function itemGeoOf(item: PlacedItem, products: ProductDTO[]): PartGeoLike
 }
 
 export interface PartGeoLike {
-  category: string
+  category: PartCategory
   diameterMm: number
   diameter2Mm: number | null
   lengthMm: number | null
@@ -179,10 +186,21 @@ export function shortName(p: { name: string; diameterMm: number; lengthMm: numbe
   return parts[0] ?? p.name
 }
 
+/** German currency format like the approved design: "28,50 €" */
 export function formatMoney(v: number, currency = 'EUR'): string {
   try {
-    return new Intl.NumberFormat('en-IE', { style: 'currency', currency, maximumFractionDigits: 2 }).format(v)
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency }).format(v)
   } catch {
-    return `€${v.toFixed(2)}`
+    return `${v.toFixed(2).replace('.', ',')} €`
   }
+}
+
+/** German millimetre format with thousands dots: "3.000" */
+export function formatMm(v: number): string {
+  return new Intl.NumberFormat('de-DE').format(Math.round(v))
+}
+
+/** German metre format with decimal comma: "18,00 m" */
+export function formatM(v: number): string {
+  return `${v.toFixed(2).replace('.', ',')} m`
 }

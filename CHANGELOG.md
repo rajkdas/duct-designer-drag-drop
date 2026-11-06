@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-11-06
+
+### Changed
+- **Design overhaul to match the BIMA reference design**: light CAD-style workspace with white cards, hairline borders and soft shadows; BIMA royal-blue (#0b33d5) replaces orange as the default brand colour (dealer white-label colours still override).
+- Two-row app chrome: header with text logo (BIMA DuctDesigner) + project name + Save / Share / Export / Request quote, and a toolbar with Parts / Project tabs, selection tool buttons (rotate, duplicate, remove, clear) and 2D / 3D view pills.
+- 2D + 3D shown side by side as two rounded cards with header chips (default view is now split); stacked round zoom / fit buttons on the plan card.
+- Engineering dimension lines ("18.00 m" / "12.00 m") with arrowheads, workshop walls with a door opening, and blue connection joints on the plan.
+- Steel-gradient part rendering with specular highlight on pipes (plan, iso and palette thumbnails).
+- Parts catalogue restructured into collapsible category rows with thumbnails and part counts; search flattens across categories.
+- Properties panel rebuilt as label/value form rows with a part header (thumbnail + price badge); new Calculation tab with live totals; new Project tab (left) with name / customer / room size.
+- Bill of materials moved to a bottom bar: tabbed table (Parts list / Positions / Project info) with Pos / Article / Description / Diameter / Qty / Unit price / Total columns plus a totals card with the gross total in brand blue; compact column set in the share-view sidebar.
+- Landing page: text logo, outline feature icon tiles, blue accent.
+
+### Fixed
+- Lint errors that failed the GitHub Actions workflow (`react-hooks/set-state-in-effect` in admin panels, carousel and `use-mobile`; ref access during render in the builder) — `npm run lint` is now clean.
+- TypeScript errors surfaced by a strict `tsc --noEmit` pass (QuoteDTO `designShareId`, `PartGeo` category unions across palette / canvas / store).
+
 ## [0.2.1] - 2026-11-06
 
 ### Added
@@ -42,4 +59,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DATABASE_URL` is resolved at runtime and passed to Prisma explicitly, with
   a `/tmp` fallback for serverless environments.
 
+[0.3.0]: https://github.com/rajkdas/duct-designer-drag-drop/releases/tag/v0.3.0
 [0.2.1]: https://github.com/rajkdas/bima-ductdesigner/releases/tag/v0.2.1

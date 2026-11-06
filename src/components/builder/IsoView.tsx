@@ -162,15 +162,15 @@ export function IsoView({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-gradient-to-b from-slate-50 to-white">
+    <div className="relative h-full w-full overflow-hidden bg-gradient-to-b from-[#f6f8fb] to-[#eef1f6]">
       <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Isometric 3D preview of the duct layout">
         {/* floor */}
-        <polygon points={floor.c.map((p) => `${p.x},${p.y}`).join(' ')} fill="#f8fafc" stroke="#cbd5e1" strokeWidth={1.5} />
+        <polygon points={floor.c.map((p) => `${p.x},${p.y}`).join(' ')} fill="#fbfcfe" stroke="#c6d1dd" strokeWidth={1.5} />
         {floor.linesX.map((l, i) => (
-          <line key={`gx${i}`} x1={l.a.x} y1={l.a.y} x2={l.b.x} y2={l.b.y} stroke="#edf1f5" strokeWidth={1} />
+          <line key={`gx${i}`} x1={l.a.x} y1={l.a.y} x2={l.b.x} y2={l.b.y} stroke="#e9eef4" strokeWidth={1} />
         ))}
         {floor.linesY.map((l, i) => (
-          <line key={`gy${i}`} x1={l.a.x} y1={l.a.y} x2={l.b.x} y2={l.b.y} stroke="#edf1f5" strokeWidth={1} />
+          <line key={`gy${i}`} x1={l.a.x} y1={l.a.y} x2={l.b.x} y2={l.b.y} stroke="#e9eef4" strokeWidth={1} />
         ))}
 
         {polys.map((p, i) => {
@@ -178,6 +178,15 @@ export function IsoView({ compact = false }: { compact?: boolean }) {
             const isUnit = p.kind === 'UNIT'
             return (
               <g key={i}>
+                {/* soft floor shadow */}
+                <ellipse
+                  cx={P(p.box.cx, p.box.cy, 0).x}
+                  cy={P(p.box.cx, p.box.cy, 0).y + 3}
+                  rx={(p.box.w * s) / 1.6}
+                  ry={(p.box.d * s) / 2.8}
+                  fill="#0f172a"
+                  opacity={0.08}
+                />
                 {isoBox(
                   p.box.cx,
                   p.box.cy,
@@ -185,8 +194,8 @@ export function IsoView({ compact = false }: { compact?: boolean }) {
                   p.box.d,
                   p.box.h,
                   isUnit
-                    ? { top: '#fde8dd', left: '#e7cdbd', right: '#f3ddd0', stroke: brand }
-                    : { top: '#f1f5f9', left: '#dbe3ea', right: '#e7edf2', stroke: '#94a3b8' }
+                    ? { top: '#f4f8fb', left: '#cfdce8', right: '#e2ebf2', stroke: brand }
+                    : { top: '#eef3f8', left: '#cdd9e4', right: '#dde6ee', stroke: '#64798e' }
                 )}
                 {p.box.label && (
                   <text
@@ -195,7 +204,7 @@ export function IsoView({ compact = false }: { compact?: boolean }) {
                     textAnchor="middle"
                     fontSize={11}
                     fontWeight={600}
-                    fill="#64748b"
+                    fill="#5b6b7e"
                   >
                     {p.box.label}
                   </text>
@@ -204,21 +213,21 @@ export function IsoView({ compact = false }: { compact?: boolean }) {
             )
           }
           const d = p.pts.map((pt) => `${pt.x},${pt.y}`).join(' ')
-          const strokeW = Math.max(2.5, p.width * s)
+          const strokeW = Math.max(4, p.width * s * 1.15)
           return (
             <g key={i} strokeLinecap="round" strokeLinejoin="round">
-              <polyline points={d} fill="none" stroke="#55636f" strokeWidth={strokeW + 2} />
-              <polyline points={d} fill="none" stroke={p.accent ? '#e8d5c4' : '#d6dee5'} strokeWidth={strokeW} />
+              <polyline points={d} fill="none" stroke="#4f6275" strokeWidth={strokeW + 2} />
+              <polyline points={d} fill="none" stroke={p.accent ? '#e6d3bd' : '#ccd6df'} strokeWidth={strokeW} />
+              {/* bottom shade + specular highlight → cylindrical metal look */}
+              <polyline points={d} fill="none" stroke="#9fb0bf" strokeWidth={Math.max(1.5, strokeW * 0.3)} transform={`translate(0 ${strokeW * 0.22})`} opacity={0.75} />
+              <polyline points={d} fill="none" stroke="#f8fbfd" strokeWidth={Math.max(1.2, strokeW * 0.3)} transform="translate(-1 -2)" opacity={0.95} />
               {p.kind === 'FLEX' && (
-                <polyline points={d} fill="none" stroke="#b8a48f" strokeWidth={strokeW} strokeDasharray="6 5" opacity={0.55} />
+                <polyline points={d} fill="none" stroke="#b09a7f" strokeWidth={strokeW} strokeDasharray="6 5" opacity={0.55} />
               )}
             </g>
           )
         })}
       </svg>
-      <div className="pointer-events-none absolute bottom-2 left-3 text-[10px] font-medium tracking-wide text-slate-400 uppercase">
-        Isometric preview — schematic
-      </div>
     </div>
   )
 }

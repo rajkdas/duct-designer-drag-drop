@@ -50,8 +50,15 @@ export function ProductsPanel() {
   }, [])
 
   useEffect(() => {
-    load()
-  }, [load])
+    let cancelled = false
+    ;(async () => {
+      const r = await fetch('/api/products')
+      if (!cancelled && r.ok) setProducts(await r.json())
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase()

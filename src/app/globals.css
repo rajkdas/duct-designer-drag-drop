@@ -51,18 +51,19 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  /* BIMA brand blue — sampled from the design mockup (#0b33d5) */
+  --primary: oklch(0.48 0.24 265);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent: oklch(0.951 0.023 265);
+  --accent-foreground: oklch(0.42 0.2 265);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.48 0.24 265);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -119,4 +120,68 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* BIMA DuctDesigner — app chrome (matches the reference design)       */
+/* ------------------------------------------------------------------ */
+:root {
+  --bima-blue: #0b33d5;
+  --bima-blue-dark: #0929b4;
+  --workspace: #f6f7f9;
+}
+
+.dd-card {
+  @apply rounded-xl border border-[#e5e7ee] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_16px_-10px_rgba(15,23,42,0.10)];
+}
+
+/* canvas view chips — dark slate pills, approved design */
+.dd-chip-dark {
+  @apply inline-flex items-center gap-1.5 rounded-lg bg-[#525b74] px-2.5 py-1.5 text-[12px] font-semibold text-white shadow-[0_2px_6px_-2px_rgba(15,23,42,0.4)];
+}
+
+.dd-tab {
+  @apply relative flex h-10 items-center gap-1.5 px-2.5 text-[13px] font-semibold text-slate-500 transition hover:text-slate-800;
+}
+
+.dd-tab[data-active='true'] {
+  @apply text-[var(--bima-blue)];
+}
+
+.dd-tab[data-active='true']::after {
+  content: '';
+  @apply absolute inset-x-1.5 bottom-0 h-[3px] rounded-full bg-[var(--bima-blue)];
+}
+
+/* toolbar tool buttons — design: blue square when active */
+.dd-tool {
+  @apply flex h-[34px] w-[34px] items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent;
+}
+
+.dd-tool[data-active='true'] {
+  @apply bg-[var(--bima-blue)] text-white shadow-[0_2px_8px_-2px_rgba(11,51,213,0.55)] hover:bg-[var(--bima-blue)] hover:text-white;
+}
+
+/* left-panel category card — design: bordered white card with 3D thumb */
+.dd-cat-card {
+  @apply flex w-full items-center rounded-xl border border-[#e5e7ee] bg-white px-2.5 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-slate-300 hover:shadow-[0_3px_10px_-4px_rgba(15,23,42,0.18)];
+}
+
+/* thin styled scrollbars for panels */
+.dd-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.dd-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.dd-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  background-clip: content-box;
+}
+.dd-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }

@@ -32,7 +32,7 @@ const P = (
   extra: Partial<Seed> = {}
 ): Seed => ({ sku, name, description, category, diameterMm, price, sortOrder, ...extra })
 
-const galv = 'Galvanised steel, with integrated sealing lip'
+const galv = 'verzinkter Stahl, mit integrierter Dichtlippe'
 
 const PRODUCTS: Seed[] = [
   // straight pipes
@@ -41,8 +41,8 @@ const PRODUCTS: Seed[] = [
       P(
         100 + i * 10 + j,
         `R-${d}-${len}`,
-        `Straight pipe Ø${d} × ${len} mm`,
-        `Straight pipe Ø${d} mm, ${len} mm long, ${galv}`,
+        `Rohr, gerade Ø${d} × ${len} mm`,
+        `Gerades Rohr Ø${d} mm, ${len} mm lang, ${galv}`,
         'PIPE',
         d,
         [12.9, 19.9, 32.9, 14.9, 22.5, 36.9, 16.9, 25.9, 42.5, 18.9, 28.5, 46.9, 21.9, 33.9, 54.9][i * 3 + j],
@@ -52,58 +52,58 @@ const PRODUCTS: Seed[] = [
   ),
   // bends 90° / 45° / 30° / 22.5°
   ...[100, 125, 160, 200, 250].map((d, i) =>
-    P(200 + i, `B-${d}-90`, `Bend 90° Ø${d}`, `90° segmental bend Ø${d} mm, R = 1.5 × D, ${galv}`, 'BEND', d, [18.9, 22.9, 27.9, 34.9, 44.9][i], { angleDeg: 90 })
+    P(200 + i, `B-${d}-90`, `Bogen 90° Ø${d}`, `90° Segmentbogen Ø${d} mm, R = 1,5 × D, verzinkter Stahl`, 'BEND', d, [18.9, 22.9, 27.9, 34.9, 44.9][i], { angleDeg: 90 })
   ),
   ...[100, 125, 160, 200, 250].map((d, i) =>
-    P(210 + i, `B-${d}-45`, `Bend 45° Ø${d}`, `45° segmental bend Ø${d} mm, R = 1.5 × D, ${galv}`, 'BEND', d, [17.9, 21.5, 25.9, 32.9, 42.5][i], { angleDeg: 45 })
+    P(210 + i, `B-${d}-45`, `Bogen 45° Ø${d}`, `45° Segmentbogen Ø${d} mm, R = 1,5 × D, verzinkter Stahl`, 'BEND', d, [17.9, 21.5, 25.9, 32.9, 42.5][i], { angleDeg: 45 })
   ),
-  P(220, 'B-160-30', 'Bend 30° Ø160', '30° segmental bend Ø160 mm, R = 1.5 × D, galvanised steel', 'BEND', 160, 24.9, { angleDeg: 30 }),
-  P(221, 'B-200-30', 'Bend 30° Ø200', '30° segmental bend Ø200 mm, R = 1.5 × D, galvanised steel', 'BEND', 200, 31.9, { angleDeg: 30 }),
-  P(222, 'B-160-22.5', 'Bend 22.5° Ø160', '22.5° segmental bend Ø160 mm for fine routing', 'BEND', 160, 23.9, { angleDeg: 22.5 }),
-  P(223, 'B-200-22.5', 'Bend 22.5° Ø200', '22.5° segmental bend Ø200 mm for fine routing', 'BEND', 200, 30.9, { angleDeg: 22.5 }),
+  P(220, 'B-160-30', 'Bogen 30° Ø160', '30° Segmentbogen Ø160 mm, R = 1,5 × D, verzinkter Stahl', 'BEND', 160, 24.9, { angleDeg: 30 }),
+  P(221, 'B-200-30', 'Bogen 30° Ø200', '30° Segmentbogen Ø200 mm, R = 1,5 × D, verzinkter Stahl', 'BEND', 200, 31.9, { angleDeg: 30 }),
+  P(222, 'B-160-22.5', 'Bogen 22,5° Ø160', '22,5° Segmentbogen Ø160 mm für feine Raumführung', 'BEND', 160, 23.9, { angleDeg: 22.5 }),
+  P(223, 'B-200-22.5', 'Bogen 22,5° Ø200', '22,5° Segmentbogen Ø200 mm für feine Raumführung', 'BEND', 200, 30.9, { angleDeg: 22.5 }),
   // Y-branches
-  P(230, 'Y-100-100-45', 'Y-branch 45° Ø100/100', `Y-branch 45°, main Ø100, branch Ø100, ${galv}`, 'YBRANCH', 100, 39.0, { diameter2Mm: 100, branchAngleDeg: 45 }),
-  P(231, 'Y-125-125-45', 'Y-branch 45° Ø125/125', `Y-branch 45°, main Ø125, branch Ø125, ${galv}`, 'YBRANCH', 125, 45.0, { diameter2Mm: 125, branchAngleDeg: 45 }),
-  P(232, 'Y-160-125-45', 'Y-branch 45° Ø160/125', `Y-branch 45°, main Ø160, branch Ø125, ${galv}`, 'YBRANCH', 160, 54.0, { diameter2Mm: 125, branchAngleDeg: 45 }),
-  P(233, 'Y-160-160-45', 'Y-branch 45° Ø160/160', `Y-branch 45°, main Ø160, branch Ø160, ${galv}`, 'YBRANCH', 160, 59.0, { diameter2Mm: 160, branchAngleDeg: 45 }),
-  P(234, 'Y-200-125-45', 'Y-branch 45° Ø200/125', `Y-branch 45°, main Ø200, branch Ø125, ${galv}`, 'YBRANCH', 200, 69.0, { diameter2Mm: 125, branchAngleDeg: 45 }),
-  P(235, 'Y-200-160-45', 'Y-branch 45° Ø200/160', `Y-branch 45°, main Ø200, branch Ø160, ${galv}`, 'YBRANCH', 200, 74.0, { diameter2Mm: 160, branchAngleDeg: 45 }),
-  P(236, 'Y-200-200-45', 'Y-branch 45° Ø200/200', `Y-branch 45°, main Ø200, branch Ø200, ${galv}`, 'YBRANCH', 200, 79.0, { diameter2Mm: 200, branchAngleDeg: 45 }),
-  P(237, 'Y-250-200-45', 'Y-branch 45° Ø250/200', `Y-branch 45°, main Ø250, branch Ø200, ${galv}`, 'YBRANCH', 250, 99.0, { diameter2Mm: 200, branchAngleDeg: 45 }),
+  P(230, 'Y-100-100-45', 'Y-Abzweiger 45° Ø100/100', `Y-Abzweiger 45°, Hauptleitung Ø100, Abzweig Ø100, ${galv}`, 'YBRANCH', 100, 39.0, { diameter2Mm: 100, branchAngleDeg: 45 }),
+  P(231, 'Y-125-125-45', 'Y-Abzweiger 45° Ø125/125', `Y-Abzweiger 45°, Hauptleitung Ø125, Abzweig Ø125, ${galv}`, 'YBRANCH', 125, 45.0, { diameter2Mm: 125, branchAngleDeg: 45 }),
+  P(232, 'Y-160-125-45', 'Y-Abzweiger 45° Ø160/125', `Y-Abzweiger 45°, Hauptleitung Ø160, Abzweig Ø125, ${galv}`, 'YBRANCH', 160, 54.0, { diameter2Mm: 125, branchAngleDeg: 45 }),
+  P(233, 'Y-160-160-45', 'Y-Abzweiger 45° Ø160/160', `Y-Abzweiger 45°, Hauptleitung Ø160, Abzweig Ø160, ${galv}`, 'YBRANCH', 160, 59.0, { diameter2Mm: 160, branchAngleDeg: 45 }),
+  P(234, 'Y-200-125-45', 'Y-Abzweiger 45° Ø200/125', `Y-Abzweiger 45°, Hauptleitung Ø200, Abzweig Ø125, ${galv}`, 'YBRANCH', 200, 69.0, { diameter2Mm: 125, branchAngleDeg: 45 }),
+  P(235, 'Y-200-160-45', 'Y-Abzweiger 45° Ø200/160', `Y-Abzweiger 45°, Hauptleitung Ø200, Abzweig Ø160, ${galv}`, 'YBRANCH', 200, 74.0, { diameter2Mm: 160, branchAngleDeg: 45 }),
+  P(236, 'Y-200-200-45', 'Y-Abzweiger 45° Ø200/200', `Y-Abzweiger 45°, Hauptleitung Ø200, Abzweig Ø200, ${galv}`, 'YBRANCH', 200, 79.0, { diameter2Mm: 200, branchAngleDeg: 45 }),
+  P(237, 'Y-250-200-45', 'Y-Abzweiger 45° Ø250/200', `Y-Abzweiger 45°, Hauptleitung Ø250, Abzweig Ø200, ${galv}`, 'YBRANCH', 250, 99.0, { diameter2Mm: 200, branchAngleDeg: 45 }),
   // T-branches
-  P(240, 'T-125-125', 'T-branch 90° Ø125/125', `T-branch 90°, main Ø125, branch Ø125, ${galv}`, 'TBRANCH', 125, 38.0, { diameter2Mm: 125 }),
-  P(241, 'T-160-160', 'T-branch 90° Ø160/160', `T-branch 90°, main Ø160, branch Ø160, ${galv}`, 'TBRANCH', 160, 49.0, { diameter2Mm: 160 }),
-  P(242, 'T-200-200', 'T-branch 90° Ø200/200', `T-branch 90°, main Ø200, branch Ø200, ${galv}`, 'TBRANCH', 200, 64.0, { diameter2Mm: 200 }),
+  P(240, 'T-125-125', 'T-Stück 90° Ø125/125', `T-Stück 90°, Hauptleitung Ø125, Abzweig Ø125, ${galv}`, 'TBRANCH', 125, 38.0, { diameter2Mm: 125 }),
+  P(241, 'T-160-160', 'T-Stück 90° Ø160/160', `T-Stück 90°, Hauptleitung Ø160, Abzweig Ø160, ${galv}`, 'TBRANCH', 160, 49.0, { diameter2Mm: 160 }),
+  P(242, 'T-200-200', 'T-Stück 90° Ø200/200', `T-Stück 90°, Hauptleitung Ø200, Abzweig Ø200, ${galv}`, 'TBRANCH', 200, 64.0, { diameter2Mm: 200 }),
   // reducers
-  P(250, 'RED-125-100', 'Reducer Ø125 → Ø100', 'Concentric reducer from Ø125 to Ø100, 300 mm', 'REDUCER', 125, 19.9, { diameter2Mm: 100, lengthMm: 300 }),
-  P(251, 'RED-160-125', 'Reducer Ø160 → Ø125', 'Concentric reducer from Ø160 to Ø125, 300 mm', 'REDUCER', 160, 24.9, { diameter2Mm: 125, lengthMm: 300 }),
-  P(252, 'RED-200-125', 'Reducer Ø200 → Ø125', 'Concentric reducer from Ø200 to Ø125, 300 mm', 'REDUCER', 200, 27.9, { diameter2Mm: 125, lengthMm: 300 }),
-  P(253, 'RED-200-160', 'Reducer Ø200 → Ø160', 'Concentric reducer from Ø200 to Ø160, 300 mm', 'REDUCER', 200, 29.9, { diameter2Mm: 160, lengthMm: 300 }),
-  P(254, 'RED-250-200', 'Reducer Ø250 → Ø200', 'Concentric reducer from Ø250 to Ø200, 300 mm', 'REDUCER', 250, 36.9, { diameter2Mm: 200, lengthMm: 300 }),
+  P(250, 'RED-125-100', 'Reduzierung Ø125 → Ø100', 'Konzentrische Reduzierung von Ø125 auf Ø100, 300 mm', 'REDUCER', 125, 19.9, { diameter2Mm: 100, lengthMm: 300 }),
+  P(251, 'RED-160-125', 'Reduzierung Ø160 → Ø125', 'Konzentrische Reduzierung von Ø160 auf Ø125, 300 mm', 'REDUCER', 160, 24.9, { diameter2Mm: 125, lengthMm: 300 }),
+  P(252, 'RED-200-125', 'Reduzierung Ø200 → Ø125', 'Konzentrische Reduzierung von Ø200 auf Ø125, 300 mm', 'REDUCER', 200, 27.9, { diameter2Mm: 125, lengthMm: 300 }),
+  P(253, 'RED-200-160', 'Reduzierung Ø200 → Ø160', 'Konzentrische Reduzierung von Ø200 auf Ø160, 300 mm', 'REDUCER', 200, 29.9, { diameter2Mm: 160, lengthMm: 300 }),
+  P(254, 'RED-250-200', 'Reduzierung Ø250 → Ø200', 'Konzentrische Reduzierung von Ø250 auf Ø200, 300 mm', 'REDUCER', 250, 36.9, { diameter2Mm: 200, lengthMm: 300 }),
   // blast gates
   ...[100, 125, 160, 200, 250].map((d, i) =>
-    P(260 + i, `GATE-${d}`, `Blast gate Ø${d}`, `Manual slide blast gate Ø${d} mm with locking lever, ${galv}`, 'GATE', d, [14.9, 16.9, 19.9, 24.9, 29.9][i])
+    P(260 + i, `GATE-${d}`, `Absperrschieber Ø${d}`, `Manueller Absperrschieber Ø${d} mm mit Verriegelungshebel, ${galv}`, 'GATE', d, [14.9, 16.9, 19.9, 24.9, 29.9][i])
   ),
   // machine hoods
   ...[100, 125, 160, 200].map((d, i) =>
-    P(270 + i, `HD-${d}`, `Machine hood Ø${d}`, `Chip extraction hood Ø${d} mm with flange plate and rubber seal`, 'HOOD', d, [22.9, 26.9, 27.9, 32.9][i])
+    P(270 + i, `HD-${d}`, `Absaughaube Ø${d}`, `Späneabsaughaube Ø${d} mm mit Flanschplatte und Gummidichtung`, 'HOOD', d, [22.9, 26.9, 27.9, 32.9][i])
   ),
   // flex hoses
-  P(280, 'FH-100-1500', 'Flex hose Ø100 × 1500', 'Flexible hose Ø100 mm, 1500 mm, PU with copper wire, earthed', 'FLEX', 100, 24.9, { lengthMm: 1500 }),
-  P(281, 'FH-125-1500', 'Flex hose Ø125 × 1500', 'Flexible hose Ø125 mm, 1500 mm, PU with copper wire, earthed', 'FLEX', 125, 27.9, { lengthMm: 1500 }),
-  P(282, 'FH-160-2000', 'Flex hose Ø160 × 2000', 'Flexible hose Ø160 mm, 2000 mm, PU with copper wire, earthed', 'FLEX', 160, 32.9, { lengthMm: 2000 }),
-  P(283, 'FH-200-2000', 'Flex hose Ø200 × 2000', 'Flexible hose Ø200 mm, 2000 mm, PU with copper wire, earthed', 'FLEX', 200, 39.9, { lengthMm: 2000 }),
+  P(280, 'FH-100-1500', 'Flexschlauch Ø100 × 1500', 'Flexibler Schlauch Ø100 mm, 1500 mm, PU mit Kupferdraht, erdungsableitend', 'FLEX', 100, 24.9, { lengthMm: 1500 }),
+  P(281, 'FH-125-1500', 'Flexschlauch Ø125 × 1500', 'Flexibler Schlauch Ø125 mm, 1500 mm, PU mit Kupferdraht, erdungsableitend', 'FLEX', 125, 27.9, { lengthMm: 1500 }),
+  P(282, 'FH-160-2000', 'Flexschlauch Ø160 × 2000', 'Flexibler Schlauch Ø160 mm, 2000 mm, PU mit Kupferdraht, erdungsableitend', 'FLEX', 160, 32.9, { lengthMm: 2000 }),
+  P(283, 'FH-200-2000', 'Flexschlauch Ø200 × 2000', 'Flexibler Schlauch Ø200 mm, 2000 mm, PU mit Kupferdraht, erdungsableitend', 'FLEX', 200, 39.9, { lengthMm: 2000 }),
   // couplings & caps
   ...[100, 125, 160, 200, 250].map((d, i) =>
-    P(290 + i, `CP-${d}`, `Coupling Ø${d}`, `Socket coupling Ø${d} mm with EPDM gasket`, 'COUPLING', d, [9.9, 10.9, 11.9, 13.9, 15.9][i])
+    P(290 + i, `CP-${d}`, `Muffe Ø${d}`, `Muffenkupplung Ø${d} mm mit EPDM-Dichtung`, 'COUPLING', d, [9.9, 10.9, 11.9, 13.9, 15.9][i])
   ),
   ...[100, 125, 160, 200, 250].map((d, i) =>
-    P(300 + i, `CAP-${d}`, `End cap Ø${d}`, `Blanking cap Ø${d} mm with gasket for unused ports`, 'CAP', d, [8.9, 9.9, 11.9, 14.9, 17.9][i])
+    P(300 + i, `CAP-${d}`, `Endkappe Ø${d}`, `Blindkappe Ø${d} mm mit Dichtung für ungenutzte Anschlussstutzen`, 'CAP', d, [8.9, 9.9, 11.9, 14.9, 17.9][i])
   ),
   // dust collector units
-  P(310, 'DC-5.5', 'Dust collector DC 5.5 kW', 'Filter unit 5.5 kW, 5,600 m³/h, 2 × cartridges, 240 l bin', 'UNIT', 250, 2990.0),
-  P(311, 'DC-11', 'Dust collector DC 11 kW', 'Filter unit 11 kW, 9,800 m³/h, 4 × cartridges, 400 l bin', 'UNIT', 250, 5490.0),
-  P(312, 'DC-22', 'Dust collector DC 22 kW', 'Filter unit 22 kW, 16,500 m³/h, 6 × cartridges, rotary valve', 'UNIT', 250, 9800.0),
+  P(310, 'DC-5.5', 'Absauganlage DC 5,5 kW', 'Filteranlage 5,5 kW, 5.600 m³/h, 2 × Filterpatronen, 240 l Behälter', 'UNIT', 250, 2990.0),
+  P(311, 'DC-11', 'Absauganlage DC 11 kW', 'Filteranlage 11 kW, 9.800 m³/h, 4 × Filterpatronen, 400 l Behälter', 'UNIT', 250, 5490.0),
+  P(312, 'DC-22', 'Absauganlage DC 22 kW', 'Filteranlage 22 kW, 16.500 m³/h, 6 × Filterpatronen, Zellenradschleuse', 'UNIT', 250, 9800.0),
 ]
 
 const DEALERS = [
@@ -245,13 +245,13 @@ export function buildDemoDesign(products: { id: string; sku: string; category: s
   // ---- main line -----------------------------------------------------------
   advance('RED-250-200')
   for (let i = 0; i < 3; i++) advance('R-200-1000')
-  branchDrop('Y-200-200-45', 'GATE-200', 'FH-200-2000', 'HD-200', 'cnc', 'CNC router', 254)
+  branchDrop('Y-200-200-45', 'GATE-200', 'FH-200-2000', 'HD-200', 'cnc', 'CNC', 254)
   for (let i = 0; i < 2; i++) advance('R-200-1000')
-  branchDrop('Y-200-160-45', 'GATE-160', 'FH-160-2000', 'HD-160', 'table-saw', 'Table saw', 115)
+  branchDrop('Y-200-160-45', 'GATE-160', 'FH-160-2000', 'HD-160', 'table-saw', 'Formatkreissäge', 115)
   advance('R-200-1000')
-  branchDrop('Y-200-125-45', 'GATE-125', 'FH-125-1500', 'HD-125', 'edge-bander', 'Edge bander', 250)
+  branchDrop('Y-200-125-45', 'GATE-125', 'FH-125-1500', 'HD-125', 'edge-bander', 'Kantenanleimer', 250)
   advance('R-200-1000')
-  branchDrop('Y-200-160-45', 'GATE-160', 'FH-160-2000', 'HD-160', 'planer', 'Thickness planer', 100)
+  branchDrop('Y-200-160-45', 'GATE-160', 'FH-160-2000', 'HD-160', 'planer', 'Hobelmaschine', 100)
   for (let i = 0; i < 2; i++) advance('R-200-1000')
   advance('B-200-90') // turn up
   advance('R-200-500')
@@ -329,7 +329,7 @@ async function doSeed() {
       data: {
         id: 'main',
         shopName: 'BIMA Absaugtechnik',
-        tagline: 'Dust extraction systems for professional workshops',
+        tagline: 'Absauganlagen für professionelle Werkstätten',
         contactEmail: 'sales@bima-example.de',
       },
     })
@@ -351,8 +351,8 @@ async function doSeed() {
     await db.design.create({
       data: {
         shareId: 'demo',
-        name: 'Sample workshop 18 × 12 m',
-        customer: 'Schreinerei Muster',
+        name: 'Schreinerei Muster',
+        customer: 'Markus Muster',
         data: JSON.stringify(data),
         itemCount: items,
         totalNet: Math.round(net * 100) / 100,
@@ -366,7 +366,7 @@ async function doSeed() {
         company: 'Schreinerei Muster',
         email: 'muster@example.de',
         phone: '+49 170 000000',
-        message: 'Please confirm availability for week 12 and include installation.',
+        message: 'Bitte Verfügbarkeit für KW 12 bestätigen und Montage inkludieren.',
         totalGross: Math.round(net * 1.19 * 100) / 100,
         status: 'NEW',
       },

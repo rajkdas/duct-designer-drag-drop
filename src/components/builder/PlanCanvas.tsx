@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PPM, useBuilder } from '@/lib/store'
-import { footprint, localPorts, worldPorts } from '@/lib/geo'
-import type { PlacedItem } from '@/lib/types'
-import { PartShape } from './PartShape'
+import { footprint, localPorts, worldPorts, type PartGeo } from '@/lib/geo'
+import { formatM, type PlacedItem } from '@/lib/types'
+import { PartDefs, PartShape } from './PartShape'
+import { Minus, Plus } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
 // Interactive 2D top-view canvas (SVG). 1 unit = 1 metre inside the world
@@ -53,7 +54,6 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
   const zoomBy = useBuilder((s) => s.zoomBy)
   const setZoom = useBuilder((s) => s.setZoom)
   const setLiveSnap = useBuilder((s) => s.setLiveSnap)
-  const clearAll = useBuilder((s) => s.clearAll)
 
   const k = PPM * zoom
   const brand = useBuilder((s) => s.settings.brandColor)
@@ -68,15 +68,19 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     return () => ro.disconnect()
   }, [])
 
-  // initial fit
-  const didFit = useRef(false)
+  // auto-fit whenever the viewport size changes — until the user takes
+  // control with a manual pan/zoom (keeps the room centred through layout
+  // shifts like the 2D/3D split resolving after mount)
+  const interacted = useRef(false)
   useEffect(() => {
-    if (didFit.current || size.w < 50) return
-    didFit.current = true
-    const z = Math.min((size.w - 90) / room.w, (size.h - 70) / room.h) / PPM
+    if (interacted.current || size.w < 50) return
+    const z = Math.min((size.w - 120) / room.w, (size.h - 110) / room.h) / PPM
     setZoom(Math.max(0.25, Math.min(2, z)))
     setPan({ x: (size.w - room.w * PPM * z) / 2, y: (size.h - room.h * PPM * z) / 2 })
   }, [size, room, setPan, setZoom])
+  const markInteracted = () => {
+    interacted.current = true
+  }
 
   // --- derived geometry -------------------------------------------------------
   const itemsGeo = useMemo(() => items.map((it) => ({ item: it, geo: geoOf(it) })), [items, geoOf])
@@ -127,6 +131,7 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
 
   const onPointerDownBg = (e: React.PointerEvent) => {
     if (readOnly) {
+      interacted.current = true
       dragRef.current = { mode: 'pan', sx: e.clientX, sy: e.clientY, px: pan.x, py: pan.y }
       ;(e.target as Element).setPointerCapture?.(e.pointerId)
       return
@@ -138,6 +143,7 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
       return
     }
     select(null)
+    markInteracted()
     dragRef.current = { mode: 'pan', sx: e.clientX, sy: e.clientY, px: pan.x, py: pan.y }
     ;(e.currentTarget as Element).setPointerCapture?.(e.pointerId)
   }
@@ -146,7 +152,9 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     if (readOnly || placing) return
     e.stopPropagation()
     if (e.button === 1) return
+    useBuilder.getState().pushHistory() // one undo step per drag
     select(item.id)
+    markInteracted()
     const w = toWorld(e.clientX, e.clientY)
     dragRef.current = { mode: 'item', id: item.id, offX: w.x - item.x, offY: w.y - item.y }
     ;(e.currentTarget as Element).setPointerCapture?.(e.pointerId)
@@ -154,6 +162,7 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
 
   const onRotateDown = (e: React.PointerEvent, item: PlacedItem) => {
     e.stopPropagation()
+    useBuilder.getState().pushHistory() // one undo step per rotation gesture
     const w = toWorld(e.clientX, e.clientY)
     dragRef.current = {
       mode: 'rotate',
@@ -201,6 +210,7 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     if (!el) return
     const handler = (e: WheelEvent) => {
       e.preventDefault()
+      interacted.current = true
       const rect = el.getBoundingClientRect()
       const f = e.deltaY < 0 ? 1.12 : 1 / 1.12
       useBuilder.getState().zoomBy(f, e.clientX - rect.left, e.clientY - rect.top)
@@ -303,7 +313,7 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
             width={fp.w + 0.18}
             height={fp.h + 0.18}
             rx={0.06}
-            fill={selected ? 'rgba(234,88,12,0.06)' : 'transparent'}
+            fill={selected ? 'rgba(11,51,213,0.05)' : 'transparent'}
             stroke={selected ? brand : '#cbd5e1'}
             strokeWidth={selected ? 0.035 : 0.025}
             strokeDasharray={selected ? '0.22 0.14' : undefined}
@@ -346,7 +356,7 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
     const p = products.find((x) => x.id === placing.productId)
     if (!p) return null
     return {
-      category: p.category,
+      category: p.category as PartGeo['category'],
       diameterMm: p.diameterMm,
       diameter2Mm: p.diameter2Mm,
       lengthMm: p.lengthMm,
@@ -357,7 +367,49 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
 
   const machinesAndUnits = itemsGeo.filter((g) => g.geo.category === 'MACHINE' || g.geo.category === 'UNIT')
   const ducts = itemsGeo.filter((g) => g.geo.category !== 'MACHINE' && g.geo.category !== 'UNIT')
-  void zoomBy
+
+  const snapIndicator = liveSnap // alias for readability below
+  const doorX0 = Math.min(room.w * 0.42, Math.max(1.2, room.w - 2.2))
+  const doorW = Math.min(1.0, room.w * 0.2)
+
+  // --- engineering dimension lines (drawn outside the room, mockup style) -----
+  const dim = (from: { x: number; y: number }, to: { x: number; y: number }, tickDir: { x: number; y: number }, label: string) => {
+    const a = { x: from.x * k + pan.x, y: from.y * k + pan.y }
+    const b = { x: to.x * k + pan.x, y: to.y * k + pan.y }
+    const t = { x: tickDir.x * 5, y: tickDir.y * 5 } // extension tick length (px)
+    const arrow = 5 // arrow head size (px)
+    const ux = (b.x - a.x) / (Math.hypot(b.x - a.x, b.y - a.y) || 1)
+    const uy = (b.y - a.y) / (Math.hypot(b.x - a.x, b.y - a.y) || 1)
+    const mx = (a.x + b.x) / 2
+    const my = (a.y + b.y) / 2
+    return (
+      <g>
+        {/* extension ticks */}
+        <line x1={a.x} y1={a.y} x2={a.x + t.x * 1.6} y2={a.y + t.y * 1.6} stroke="#94a3b8" strokeWidth={1} />
+        <line x1={b.x} y1={b.y} x2={b.x + t.x * 1.6} y2={b.y + t.y * 1.6} stroke="#94a3b8" strokeWidth={1} />
+        {/* dimension line with arrowheads */}
+        <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#64748b" strokeWidth={1} />
+        <polygon points={`${a.x},${a.y} ${a.x + ux * arrow - uy * arrow * 0.55},${a.y + uy * arrow + ux * arrow * 0.55} ${a.x + ux * arrow + uy * arrow * 0.55},${a.y + uy * arrow - ux * arrow * 0.55}`} fill="#64748b" />
+        <polygon points={`${b.x},${b.y} ${b.x - ux * arrow - uy * arrow * 0.55},${b.y - uy * arrow + ux * arrow * 0.55} ${b.x - ux * arrow + uy * arrow * 0.55},${b.y - uy * arrow - ux * arrow * 0.55}`} fill="#64748b" />
+        {/* label */}
+        <text
+          x={mx + (uy !== 0 ? -8 : 0)}
+          y={my - 6}
+          textAnchor="middle"
+          fontSize={11.5}
+          fontWeight={600}
+          fill="#334155"
+          stroke="white"
+          strokeWidth={3.5}
+          paintOrder="stroke"
+          transform={uy !== 0 ? `rotate(-90 ${mx - 8} ${my - 6})` : undefined}
+          style={{ userSelect: 'none', pointerEvents: 'none' }}
+        >
+          {label}
+        </text>
+      </g>
+    )
+  }
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-white" data-canvas>
@@ -373,26 +425,41 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
         role="application"
         aria-label="Duct layout canvas"
       >
+        <PartDefs />
         <g transform={`translate(${pan.x} ${pan.y}) scale(${k})`}>
           {/* room floor */}
-          <rect x={0} y={0} width={room.w} height={room.h} fill="#fcfdfe" />
+          <rect x={0} y={0} width={room.w} height={room.h} fill="#fdfefe" />
           {/* grid */}
           <g>
             {grid.minor.map((v, i) => (
-              <line key={`vm${i}`} x1={v} y1={grid.h0} x2={v} y2={grid.h1} stroke="#eef1f4" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+              <line key={`vm${i}`} x1={v} y1={grid.h0} x2={v} y2={grid.h1} stroke="#eef1f5" strokeWidth={1} vectorEffect="non-scaling-stroke" />
             ))}
             {grid.minor.map((v, i) => (
-              <line key={`hm${i}`} x1={grid.w0} y1={v} x2={grid.w1} y2={v} stroke="#eef1f4" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+              <line key={`hm${i}`} x1={grid.w0} y1={v} x2={grid.w1} y2={v} stroke="#eef1f5" strokeWidth={1} vectorEffect="non-scaling-stroke" />
             ))}
             {grid.major.map((v, i) => (
-              <line key={`vM${i}`} x1={v} y1={grid.h0} x2={v} y2={grid.h1} stroke="#e4e8ec" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+              <line key={`vM${i}`} x1={v} y1={grid.h0} x2={v} y2={grid.h1} stroke="#e3e9ef" strokeWidth={1} vectorEffect="non-scaling-stroke" />
             ))}
             {grid.major.map((v, i) => (
-              <line key={`hM${i}`} x1={grid.w0} y1={v} x2={grid.w1} y2={v} stroke="#e4e8ec" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+              <line key={`hM${i}`} x1={grid.w0} y1={v} x2={grid.w1} y2={v} stroke="#e3e9ef" strokeWidth={1} vectorEffect="non-scaling-stroke" />
             ))}
           </g>
-          {/* room boundary */}
-          <rect x={0} y={0} width={room.w} height={room.h} fill="none" stroke="#94a3b8" strokeWidth={1.6} vectorEffect="non-scaling-stroke" rx={0.05} />
+          {/* room walls with door opening — vectorEffect must sit on every
+              element: it does NOT inherit from the group */}
+          <g stroke="#7c8ea3" fill="none" strokeLinecap="square">
+            <line x1={0} y1={0} x2={room.w} y2={0} strokeWidth={2.4} vectorEffect="non-scaling-stroke" />
+            <line x1={0} y1={0} x2={0} y2={room.h} strokeWidth={2.4} vectorEffect="non-scaling-stroke" />
+            <line x1={room.w} y1={0} x2={room.w} y2={room.h} strokeWidth={2.4} vectorEffect="non-scaling-stroke" />
+            <line x1={0} y1={room.h} x2={doorX0} y2={room.h} strokeWidth={2.4} vectorEffect="non-scaling-stroke" />
+            <line x1={doorX0 + doorW} y1={room.h} x2={room.w} y2={room.h} strokeWidth={2.4} vectorEffect="non-scaling-stroke" />
+            {/* door jambs + swing arc */}
+            <g stroke="#a9b7c6">
+              <line x1={doorX0} y1={room.h} x2={doorX0} y2={room.h - 0.22} strokeWidth={1.2} vectorEffect="non-scaling-stroke" />
+              <line x1={doorX0 + doorW} y1={room.h} x2={doorX0 + doorW} y2={room.h - 0.22} strokeWidth={1.2} vectorEffect="non-scaling-stroke" />
+              <line x1={doorX0} y1={room.h} x2={doorX0} y2={room.h - doorW} strokeWidth={1} vectorEffect="non-scaling-stroke" strokeDasharray="4 3" />
+              <path d={`M ${doorX0} ${room.h - doorW} A ${doorW} ${doorW} 0 0 1 ${doorX0 + doorW} ${room.h}`} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+            </g>
+          </g>
 
           {/* machines & units below ducts */}
           {machinesAndUnits.map(renderItem)}
@@ -400,13 +467,13 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
 
           {/* joints */}
           {joints.map((j, i) => (
-            <circle key={i} cx={j.x} cy={j.y} r={0.055} fill={brand} opacity={0.85} />
+            <circle key={i} cx={j.x} cy={j.y} r={0.055} fill={brand} opacity={0.9} />
           ))}
 
           {/* snap indicator */}
-          {liveSnap && (
+          {snapIndicator && (
             <g>
-              <circle cx={liveSnap.x} cy={liveSnap.y} r={0.16} fill="none" stroke={liveSnap.aligned ? '#16a34a' : '#d97706'} strokeWidth={2.5} strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />
+              <circle cx={snapIndicator.x} cy={snapIndicator.y} r={0.16} fill="none" stroke={snapIndicator.aligned ? '#16a34a' : '#d97706'} strokeWidth={2.5} strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />
             </g>
           )}
 
@@ -421,42 +488,25 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
           )}
         </g>
 
-        {/* screen-space overlay: grid labels + machine labels */}
+        {/* screen-space overlay: dimension lines + machine labels */}
         <g>
-          {Array.from({ length: Math.floor(room.w / grid.labelStep) + 1 }, (_, i) => {
-            const x = i * grid.labelStep
-            return (
-              <text key={`lx${i}`} x={x * k + pan.x} y={pan.y + 12} textAnchor="middle" fontSize={9} fill="#b6bfc9">
-                {i * grid.labelStep}
-              </text>
-            )
-          })}
-          {Array.from({ length: Math.floor(room.h / grid.labelStep) + 1 }, (_, i) => {
-            const y = i * grid.labelStep
-            return (
-              <text key={`ly${i}`} x={pan.x - 6} y={y * k + pan.y + 3} textAnchor="end" fontSize={9} fill="#b6bfc9">
-                {i * grid.labelStep}
-              </text>
-            )
-          })}
+          {dim({ x: 0, y: -0.55 }, { x: room.w, y: -0.55 }, { x: 0, y: -1 }, formatM(room.w))}
+          {dim({ x: -0.55, y: 0 }, { x: -0.55, y: room.h }, { x: -1, y: 0 }, formatM(room.h))}
           {itemsGeo
             .filter((g) => (g.geo.category === 'MACHINE' || g.geo.category === 'UNIT') && g.item.label)
             .map(({ item, geo }) => {
               const fp = footprint(geo, item.sku)
-              const isUnit = geo.category === 'UNIT'
-              // units: label above the box; machines: label at centre
-              const lp = isUnit
-                ? { x: (item.x + fp.w / 2) * k + pan.x, y: item.y * k + pan.y - 8 }
-                : { x: item.x * k + pan.x, y: item.y * k + pan.y + 4 }
+              // design places machine labels BELOW the box
+              const lp = { x: (item.x + fp.ox + fp.w / 2) * k + pan.x, y: (item.y + fp.oy + fp.h) * k + pan.y + 14 }
               return (
                 <text
                   key={`ml${item.id}`}
                   x={lp.x}
                   y={lp.y}
                   textAnchor="middle"
-                  fontSize={11}
+                  fontSize={11.5}
                   fontWeight={600}
-                  fill="#64748b"
+                  fill="#47536b"
                   stroke="white"
                   strokeWidth={3}
                   paintOrder="stroke"
@@ -469,34 +519,38 @@ export function PlanCanvas({ readOnly = false }: { readOnly?: boolean }) {
         </g>
       </svg>
 
-      {/* scale bar */}
-      <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 rounded-md border border-slate-200 bg-white/90 px-2 py-1 text-[10px] text-slate-500 shadow-sm">
-        <div className="h-[6px] border-x-2 border-b-2 border-slate-400" style={{ width: k }} />
-        1 m
-      </div>
+      {/* zoom controls — stacked square buttons, design style */}
+      {!readOnly && (
+        <div className="absolute right-3 bottom-3 flex flex-col gap-1.5">
+          <button
+            onClick={() => zoomBy(1.2)}
+            className="dd-card flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition hover:text-[var(--brand)]"
+            aria-label="Vergrößern"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => zoomBy(1 / 1.2)}
+            className="dd-card flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition hover:text-[var(--brand)]"
+            aria-label="Verkleinern"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* hints */}
       {items.length === 0 && !readOnly && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="max-w-xs rounded-xl border border-dashed border-slate-300 bg-white/85 p-5 text-center text-sm text-slate-500">
-            <p className="font-medium text-slate-700">Start your layout</p>
+          <div className="dd-card max-w-xs p-5 text-center text-sm text-slate-500">
+            <p className="font-semibold text-slate-700">Layout starten</p>
             <p className="mt-1">
-              Drag a part from the library, or tap a part once and then click the canvas. Ports snap together automatically.
+              Teil aus dem Katalog hierher ziehen — oder Teil in der Bibliothek antippen und auf die Zeichenfläche klicken. Anschlüsse rasten automatisch ein.
             </p>
           </div>
         </div>
       )}
-      {!readOnly && items.length > 0 && (
-        <button
-          onClick={() => {
-            if (confirm('Remove all parts from the layout?')) clearAll()
-          }}
-          className="absolute right-3 top-3 rounded-md border border-slate-200 bg-white/90 px-2.5 py-1.5 text-xs text-slate-500 shadow-sm transition hover:border-red-200 hover:text-red-600"
-        >
-          Clear layout
-        </button>
-      )}
-      {readOnly && <div className="pointer-events-none absolute right-3 bottom-3 rounded-md border border-slate-200 bg-white/90 px-2 py-1 text-[10px] font-medium tracking-wide text-slate-400 uppercase">Read-only view</div>}
+      {readOnly && <div className="pointer-events-none absolute right-3 bottom-3 rounded-md border border-slate-200 bg-white/90 px-2 py-1 text-[10px] font-medium tracking-wide text-slate-400 uppercase">Nur-Ansicht</div>}
     </div>
   )
 }
@@ -508,7 +562,7 @@ export function fitToRoom() {
   if (!el) return
   const w = el.clientWidth
   const h = el.clientHeight
-  const z = Math.max(0.25, Math.min(2, Math.min((w - 90) / s.room.w, (h - 70) / s.room.h) / PPM))
+  const z = Math.max(0.25, Math.min(2, Math.min((w - 120) / s.room.w, (h - 110) / s.room.h) / PPM))
   s.setZoom(z)
   s.setPan({ x: (w - s.room.w * PPM * z) / 2, y: (h - s.room.h * PPM * z) / 2 })
 }

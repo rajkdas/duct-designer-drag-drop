@@ -15,7 +15,7 @@ export function Landing() {
       .catch(() => {})
   }, [])
 
-  const brand = settings?.brandColor ?? '#ea580c'
+  const brand = settings?.brandColor ?? '#0b33d5'
 
   return (
     <div className="flex min-h-dvh flex-col bg-white" style={{ ['--brand' as string]: brand }}>
@@ -23,28 +23,27 @@ export function Landing() {
       <header className="sticky top-0 z-30 border-b border-slate-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-sm" style={{ background: 'var(--brand)' }}>
-              <Fan className="h-5 w-5" />
-            </div>
             <div className="leading-tight">
-              <p className="text-sm font-bold text-slate-800">{settings?.shopName ?? 'BIMA Absaugtechnik'}</p>
-              <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">DuctDesigner</p>
+              <p className="text-[17px] font-extrabold tracking-tight">
+                <span className="text-[var(--brand)]">BIMA</span> <span className="text-slate-900">DuctDesigner</span>
+              </p>
+              <p className="text-[10px] font-medium text-slate-400">Absauganlagen planen · visualisieren · konfigurieren</p>
             </div>
           </div>
           <nav className="ml-auto hidden items-center gap-5 text-sm font-medium text-slate-500 md:flex" aria-label="Main">
-            <a href="#features" className="transition hover:text-slate-800">Features</a>
-            <a href="#dealers" className="transition hover:text-slate-800">For dealers</a>
-            <a href="/?docs=1" className="transition hover:text-slate-800">Documentation</a>
+            <a href="#features" className="transition hover:text-slate-800">Funktionen</a>
+            <a href="#dealers" className="transition hover:text-slate-800">Für Händler</a>
+            <a href="/?docs=1" className="transition hover:text-slate-800">Dokumentation</a>
           </nav>
           <div className="ml-auto flex items-center gap-2 md:ml-4">
             <a href="/?admin=1">
               <Button variant="outline" size="sm">
-                <Lock className="mr-1.5 h-3.5 w-3.5" /> Admin
+                <Lock className="mr-1.5 h-3.5 w-3.5" /> Verwaltung
               </Button>
             </a>
             <a href="/?app=builder">
               <Button size="sm" className="text-white shadow-sm" style={{ background: 'var(--brand)' }}>
-                <PencilRuler className="mr-1.5 h-3.5 w-3.5" /> Open the planner
+                <PencilRuler className="mr-1.5 h-3.5 w-3.5" /> Planer öffnen
               </Button>
             </a>
           </div>
@@ -53,37 +52,37 @@ export function Landing() {
 
       {/* hero */}
       <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_70%_20%,rgba(234,88,12,0.07),transparent)]" aria-hidden />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_70%_20%,rgba(11,51,213,0.06),transparent)]" aria-hidden />
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 lg:grid-cols-2 lg:py-20">
           <div>
             <p className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--brand)' }} />
-              Plan · Price · Quote — in the browser
+              Planen · Kalkulieren · Anfragen — direkt im Browser
             </p>
             <h1 className="mt-4 text-4xl leading-tight font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-              Design your dust extraction system in <span style={{ color: 'var(--brand)' }}>minutes</span>, not evenings.
+              Planen Sie Ihre Absauganlage in <span style={{ color: 'var(--brand)' }}>Minuten</span>, nicht in Abenden.
             </h1>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-500">
-              Drag pipes, bends and take-offs onto your workshop floor plan. The bill of materials prices itself live from our
-              catalogue — then send it to us as a quote request or share it with any dealer via link.
+              Rohre, Bögen und Absaugstutzen per Drag & Drop auf den Hallengrundriss ziehen. Die Stückliste kalkuliert sich live
+              aus unserem Katalog — als Angebot anfordern oder per Link mit jedem Händler teilen.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href="/?app=builder">
                 <Button size="lg" className="text-white shadow-md" style={{ background: 'var(--brand)' }}>
-                  <PencilRuler className="mr-2 h-4 w-4" /> Start planning — it&apos;s free
+                  <PencilRuler className="mr-2 h-4 w-4" /> Jetzt planen — kostenlos
                 </Button>
               </a>
               <a href="/?design=demo">
                 <Button size="lg" variant="outline">
-                  See a finished example <ArrowRight className="ml-2 h-4 w-4" />
+                  Fertiges Beispiel ansehen <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </a>
             </div>
             <dl className="mt-8 grid max-w-md grid-cols-3 gap-4">
               {[
-                ['50+', 'catalogue parts'],
-                ['Live', 'prices & stock'],
-                ['2D + 3D', 'plan & preview'],
+                ['71', 'Katalogteile'],
+                ['Live', 'Preise & Bestand'],
+                ['2D + 3D', 'Plan & Vorschau'],
               ].map(([v, l]) => (
                 <div key={l}>
                   <dt className="text-lg font-extrabold text-slate-800">{v}</dt>
@@ -99,45 +98,45 @@ export function Landing() {
       {/* features */}
       <section id="features" className="border-t border-slate-100 bg-slate-50/60 py-14">
         <div className="mx-auto max-w-6xl px-4">
-          <h2 className="text-center text-2xl font-bold text-slate-800">Everything the workshop needs</h2>
+          <h2 className="text-center text-2xl font-bold text-slate-800">Alles, was die Werkstatt braucht</h2>
           <p className="mx-auto mt-2 max-w-lg text-center text-sm text-slate-500">
-            Built for joiners and machine dealers — no CAD, no spreadsheets, no PDF price lists from 2019.
+            Für Schreinereien und Maschinenhändler — kein CAD, keine Tabellen, keine PDF-Preislisten von 2019.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 icon: MousePointer2,
-                title: 'Drag & drop planning',
-                text: 'Straight pipes, 90°/45°/30°/22.5° bends, Y- and T-branches, reducers, blast gates, hoods and flex hoses — with port snapping and a 0.25 m grid.',
+                title: 'Drag & Drop Planung',
+                text: 'Gerade Rohre, 90°/45°/30°/22,5° Bögen, Y- und T-Stücke, Reduzierungen, Absperrschieber, Hauben und Flexschläuche — mit Anschluss-Magnetik und 0,25-m-Raster.',
               },
               {
                 icon: ListOrdered,
-                title: 'Live bill of materials',
-                text: 'Every placed part lands in the BOM with SKU, description, quantity and the current shop price — VAT included at the bottom line.',
+                title: 'Live-Stückliste',
+                text: 'Jedes platzierte Teil landet mit Artikelnummer, Bezeichnung, Menge und aktuellem Shop-Preis in der Stückliste — inklusive MwSt. auf dem Bruttobetrag.',
               },
               {
                 icon: FileText,
-                title: 'Quotes & exports',
-                text: 'Send the layout as a quote request in one click, or export the parts list as PDF and the full design as JSON.',
+                title: 'Angebote & Exporte',
+                text: 'Layout mit einem Klick als Angebotsanfrage senden — oder Stückliste als PDF und den gesamten Plan als JSON exportieren.',
               },
               {
                 icon: Link2,
-                title: 'Shareable design links',
-                text: 'Every design gets a unique URL — customers reopen it read-only with freshly priced parts, dealers open it straight into the editor.',
+                title: 'Teilbare Design-Links',
+                text: 'Jedes Design erhält eine eigene URL — Kunden öffnen es im Ansichtsmodus mit frisch kalkulierten Preisen, Händler direkt im Editor.',
               },
               {
                 icon: RefreshCw,
-                title: 'WooCommerce connected',
-                text: 'The catalogue syncs from your WooCommerce shop by SKU. Change a price in the shop, sync, and every new quote uses it.',
+                title: 'WooCommerce-Anbindung',
+                text: 'Der Katalog synchronisiert per SKU aus Ihrem WooCommerce-Shop. Preis im Shop geändert, sync — und jede neue Anfrage nutzt ihn.',
               },
               {
                 icon: Store,
-                title: 'Dealer white-label',
-                text: 'Partner sites embed the planner with their own colours via snippet or sub-domain — managed with monthly licences.',
+                title: 'White-Label für Händler',
+                text: 'Partnerseiten betten den Planer mit eigenen Farben per Snippet oder Subdomain ein — verwaltet mit monatlichen Lizenzen.',
               },
             ].map((f) => (
               <article key={f.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl text-white" style={{ background: 'var(--brand)' }}>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-[var(--brand)] shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
                   <f.icon className="h-5 w-5" />
                 </div>
                 <h3 className="mt-3 text-sm font-bold text-slate-800">{f.title}</h3>
@@ -151,12 +150,12 @@ export function Landing() {
       {/* how it works */}
       <section className="py-14">
         <div className="mx-auto max-w-6xl px-4">
-          <h2 className="text-center text-2xl font-bold text-slate-800">From empty hall to quote in three steps</h2>
+          <h2 className="text-center text-2xl font-bold text-slate-800">Von der leeren Halle zum Angebot in drei Schritten</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {[
-              ['01', 'Draw the workshop', 'Set the room size, drop in machines as layout aids — table saw, planer, CNC, edge bander and more.'],
-              ['02', 'Route the ducting', 'Click a dust collector, then chain pipes and fittings from its outlet to every machine. Ports magnetise.'],
-              ['03', 'Send or share', 'Save the design, share the link with a dealer, or send the priced parts list as a quote request.'],
+              ['01', 'Werkstatt zeichnen', 'Hallengröße einstellen, Maschinen als Layout-Hilfen ablegen — Formatkreissäge, Hobelmaschine, CNC, Kantenanleimer und mehr.'],
+              ['02', 'Rohrleitung führen', 'Absauganlage anklicken, dann Rohre und Formteile vom Auslass zu jeder Maschine verketten. Anschlüsse rasten magnetisch ein.'],
+              ['03', 'Senden oder teilen', 'Plan speichern, Link mit einem Händler teilen oder die kalkulierte Stückliste als Angebotsanfrage senden.'],
             ].map(([n, t, d]) => (
               <div key={n} className="relative rounded-2xl border border-slate-200 bg-white p-5 pt-8 shadow-sm">
                 <span className="absolute -top-4 left-5 flex h-9 w-9 items-center justify-center rounded-xl text-sm font-extrabold text-white shadow-md" style={{ background: 'var(--brand)' }}>
@@ -175,28 +174,28 @@ export function Landing() {
         <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 lg:grid-cols-[1.2fr_1fr]">
           <div>
             <p className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--brand)' }}>
-              For machine dealers
+              Für Maschinenhändler
             </p>
-            <h2 className="mt-2 text-3xl font-bold">Sell extraction systems on your own website</h2>
+            <h2 className="mt-2 text-3xl font-bold">Absauganlagen auf der eigenen Website verkaufen</h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-300">
-              Embed the planner on your site with a two-line snippet — branded with your colours. Your customers plan with our
-              parts catalogue, and the quote request lands with you. Monthly licence, cancel anytime.
+              Betten Sie den Planer mit einem Zwei-Zeilen-Snippet auf Ihrer Seite ein — in Ihren Farben. Ihre Kunden planen mit
+              unserem Katalog, und die Angebotsanfrage landet bei Ihnen. Monatliche Lizenz, jederzeit kündbar.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <a href="/?embed=1&dealer=holzprofi" target="_blank">
                 <Button size="lg" className="text-slate-900" style={{ background: 'var(--brand)' }}>
-                  <Store className="mr-2 h-4 w-4" /> Preview a dealer embed
+                  <Store className="mr-2 h-4 w-4" /> Händler-Embed ansehen
                 </Button>
               </a>
               <a href="/?docs=1#dealers">
                 <Button size="lg" variant="outline" className="border-slate-700 bg-transparent text-slate-200 hover:bg-slate-800 hover:text-white">
-                  <BookOpen className="mr-2 h-4 w-4" /> How embedding works
+                  <BookOpen className="mr-2 h-4 w-4" /> So funktioniert die Einbindung
                 </Button>
               </a>
             </div>
           </div>
           <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5">
-            <p className="text-xs font-semibold text-slate-400 uppercase">Embed in 30 seconds</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase">In 30 Sekunden eingebunden</p>
             <pre className="mt-3 overflow-x-auto rounded-xl bg-slate-950 p-4 text-[12px] leading-relaxed text-emerald-300">
 {`<div id="duct-designer"></div>
 <script
@@ -206,7 +205,7 @@ export function Landing() {
 </script>`}
             </pre>
             <ul className="mt-4 space-y-2 text-sm text-slate-300">
-              {['Your colours, your name — our catalogue', 'Quotes routed to your inbox', 'Suspend or resize the licence anytime'].map((t) => (
+              {['Ihre Farben, Ihr Name — unser Katalog', 'Anfragen landen in Ihrem Postfach', 'Lizenz jederzeit pausieren oder kündigen'].map((t) => (
                 <li key={t} className="flex items-start gap-2">
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /> {t}
                 </li>
@@ -226,10 +225,10 @@ export function Landing() {
             <span className="font-semibold text-slate-600">{settings?.shopName ?? 'BIMA Absaugtechnik'} DuctDesigner</span>
           </div>
           <nav className="ml-auto flex flex-wrap gap-4" aria-label="Footer">
-            <a href="/?app=builder" className="hover:text-slate-600">Planner</a>
-            <a href="/?design=demo" className="hover:text-slate-600">Example layout</a>
-            <a href="/?docs=1" className="hover:text-slate-600">Documentation</a>
-            <a href="/?admin=1" className="hover:text-slate-600">Admin</a>
+            <a href="/?app=builder" className="hover:text-slate-600">Planer</a>
+            <a href="/?design=demo" className="hover:text-slate-600">Beispiel-Layout</a>
+            <a href="/?docs=1" className="hover:text-slate-600">Dokumentation</a>
+            <a href="/?admin=1" className="hover:text-slate-600">Verwaltung</a>
           </nav>
         </div>
       </footer>
@@ -252,10 +251,10 @@ function HeroArt({ brand }: { brand: string }) {
           <rect x="24" y="24" width="512" height="332" fill="none" stroke="#cbd5e1" strokeWidth="2" rx="6" />
           {/* machines */}
           {[
-            [70, 70, 90, 56, 'Table saw'],
-            [70, 170, 72, 50, 'Planer'],
+            [70, 70, 100, 56, 'Formatkreissäge'],
+            [70, 170, 96, 50, 'Hobelmaschine'],
             [220, 70, 104, 88, 'CNC'],
-            [70, 262, 116, 44, 'Edge bander'],
+            [70, 262, 110, 44, 'Kantenanleimer'],
           ].map(([x, y, w, h, label]) => (
             <g key={label as string}>
               <rect x={x as number} y={y as number} width={w as number} height={h as number} rx="6" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1.5" />
@@ -296,22 +295,22 @@ function HeroArt({ brand }: { brand: string }) {
           {/* BOM card */}
           <g transform="translate(300 250)">
             <rect width="216" height="96" rx="10" fill="#fff" stroke="#e2e8f0" strokeWidth="1.5" />
-            <text x="14" y="24" fontSize="10" fill="#94a3b8" fontWeight="700" letterSpacing="1">BILL OF MATERIALS</text>
+            <text x="14" y="24" fontSize="10" fill="#94a3b8" fontWeight="700" letterSpacing="1">STÜCKLISTE</text>
             {[
-              ['R-200-1000 · Pipe Ø200', '× 8'],
-              ['B-200-90 · Bend 90°', '× 4'],
-              ['Y-200-200-45 · Y-branch', '× 2'],
+              ['R-200-1000 · Rohr Ø200', '× 8'],
+              ['B-200-90 · Bogen 90°', '× 4'],
+              ['Y-200-200-45 · Abzweiger', '× 2'],
             ].map(([a, b], i) => (
               <g key={a} transform={`translate(14 ${40 + i * 14})`}>
                 <text fontSize="10" fill="#475569">{a}</text>
                 <text x="188" fontSize="10" textAnchor="end" fill="#0f172a" fontWeight="700">{b}</text>
               </g>
             ))}
-            <text x="14" y="86" fontSize="11" fill={brand} fontWeight="800">Gross € 3,388.64 incl. VAT</text>
+            <text x="14" y="86" fontSize="11" fill={brand} fontWeight="800">Brutto 3.388,64 € inkl. MwSt.</text>
           </g>
         </svg>
       </div>
-      <div className="absolute -bottom-3 left-6 rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white shadow-lg">2D plan + isometric 3D preview</div>
+      <div className="absolute -bottom-3 left-6 rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white shadow-lg">2D-Plan + isometrische 3D-Vorschau</div>
     </div>
   )
 }

@@ -26,7 +26,7 @@ export function QuoteDialog({ open, onOpenChange }: { open: boolean; onOpenChang
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.name.trim() || !form.email.trim()) {
-      toast.error('Please fill in your name and email.')
+      toast.error('Bitte füllen Sie Name und E-Mail aus.')
       return
     }
     setBusy(true)
@@ -41,10 +41,10 @@ export function QuoteDialog({ open, onOpenChange }: { open: boolean; onOpenChang
         }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Something went wrong')
+      if (!res.ok) throw new Error(data.error ?? 'Etwas ist schiefgelaufen')
       setDone(true)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not send the request')
+      toast.error(err instanceof Error ? err.message : 'Anfrage konnte nicht gesendet werden')
     } finally {
       setBusy(false)
     }
@@ -58,24 +58,24 @@ export function QuoteDialog({ open, onOpenChange }: { open: boolean; onOpenChang
         {!done ? (
           <>
             <DialogHeader>
-              <DialogTitle>Request a quote</DialogTitle>
+              <DialogTitle>Angebot anfordern</DialogTitle>
               <DialogDescription>
-                Your layout and live parts list are sent to <strong>{seller}</strong> together with this message.
+                Ihr Layout und die live kalkulierte Stückliste werden zusammen mit dieser Nachricht an <strong>{seller}</strong> gesendet.
               </DialogDescription>
             </DialogHeader>
             <div className="mb-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm">
               <div className="flex justify-between">
-                <span className="text-slate-500">Design</span>
+                <span className="text-slate-500">Projekt</span>
                 <span className="font-medium text-slate-700">{designName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Parts</span>
+                <span className="text-slate-500">Teile</span>
                 <span className="font-medium text-slate-700">
-                  {items.length} placed · {rows.length} line items
+                  {items.length} platziert · {rows.length} Positionen
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Gross total (incl. {totals.vatRate}% VAT)</span>
+                <span className="text-slate-500">Gesamt (brutto, inkl. {totals.vatRate} % MwSt.)</span>
                 <span className="font-bold text-slate-800">{formatMoney(totals.gross, settings.currency)}</span>
               </div>
             </div>
@@ -86,40 +86,40 @@ export function QuoteDialog({ open, onOpenChange }: { open: boolean; onOpenChang
                   <Input id="q-name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Markus Muster" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="q-company">Company</Label>
-                  <Input id="q-company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} placeholder="Muster Joinery" />
+                  <Label htmlFor="q-company">Firma</Label>
+                  <Input id="q-company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} placeholder="Schreinerei Muster" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="q-email">Email *</Label>
-                  <Input id="q-email" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@company.com" />
+                  <Label htmlFor="q-email">E-Mail *</Label>
+                  <Input id="q-email" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="name@firma.de" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="q-phone">Phone</Label>
+                  <Label htmlFor="q-phone">Telefon</Label>
                   <Input id="q-phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+49 …" />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="q-msg">Message</Label>
-                <Textarea id="q-msg" rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Preferred installation date, questions about the collector size…" />
+                <Label htmlFor="q-msg">Nachricht</Label>
+                <Textarea id="q-msg" rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Wunschtermin für Montage, Fragen zur Anlagengröße …" />
               </div>
               <Button type="submit" disabled={busy} className="w-full text-white" style={{ background: 'var(--brand)' }}>
                 {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                {busy ? 'Sending…' : 'Send quote request'}
+                {busy ? 'Wird gesendet …' : 'Anfrage senden'}
               </Button>
-              <p className="text-center text-[11px] text-slate-400">By sending you agree that {seller} may contact you about this request.</p>
+              <p className="text-center text-[11px] text-slate-400">Mit dem Senden stimmen Sie zu, dass {seller} Sie zu dieser Anfrage kontaktieren darf.</p>
             </form>
           </>
         ) : (
           <div className="py-6 text-center">
             <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
-            <h3 className="mt-3 text-lg font-semibold text-slate-800">Request sent!</h3>
+            <h3 className="mt-3 text-lg font-semibold text-slate-800">Anfrage gesendet!</h3>
             <p className="mx-auto mt-1 max-w-xs text-sm text-slate-500">
-              {seller} received your layout and parts list and will reply to <strong>{form.email}</strong> shortly.
+              {seller} hat Ihr Layout und Ihre Stückliste erhalten und antwortet in Kürze an <strong>{form.email}</strong>.
             </p>
             <Button variant="outline" className="mt-4" onClick={() => onOpenChange(false)}>
-              Back to the planner
+              Zurück zum Planer
             </Button>
           </div>
         )}

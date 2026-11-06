@@ -18,6 +18,11 @@ export interface SnapInfo {
   aligned: boolean
 }
 
+interface DesignSnapshot {
+  room: { w: number; h: number }
+  items: PlacedItem[]
+}
+
 interface BuilderStore {
   // design
   designName: string
@@ -28,6 +33,9 @@ interface BuilderStore {
   hoverId: string | null
   shareId: string | null
   dirty: boolean
+  // undo/redo history
+  past: DesignSnapshot[]
+  future: DesignSnapshot[]
   // context
   products: ProductDTO[]
   settings: SettingsDTO
@@ -55,12 +63,18 @@ interface BuilderStore {
   commitPlace: (x: number, y: number) => string | null
 
   moveItem: (id: string, x: number, y: number) => void
+  setItemPos: (id: string, x: number, y: number) => void
   rotateItem: (id: string, delta: number) => void
   setItemZ: (id: string, z: number, end?: boolean) => void
   setItemLabel: (id: string, label: string) => void
+  swapProduct: (id: string, productId: string) => void
   removeItem: (id: string) => void
   duplicateItem: (id: string) => void
   clearAll: () => void
+
+  pushHistory: () => void
+  undo: () => void
+  redo: () => void
 
   setView: (v: 'plan' | 'iso' | 'split') => void
   setZoom: (z: number) => void
@@ -92,15 +106,51 @@ export const useBuilder = create<BuilderStore>((set, get) => ({
     tagline: '',
     currency: 'EUR',
     vatRate: 19,
-    brandColor: '#ea580c',
+    brandColor: '#0b33d5',
     contactEmail: '',
   },
   dealer: null,
-  view: 'plan',
+  view: 'split',
   zoom: 1,
   pan: { x: 60, y: 40 },
   placing: null,
   liveSnap: null,
+  past: [],
+  future: [],
+
+  pushHistory: () =>
+    set((s) => ({
+      past: [...s.past.slice(-59), { room: s.room, items: s.items }],
+      future: [],
+    })),
+
+  undo: () =>
+    set((s) => {
+      const prev = s.past[s.past.length - 1]
+      if (!prev) return {}
+      return {
+        past: s.past.slice(0, -1),
+        future: [...s.future, { room: s.room, items: s.items }],
+        room: prev.room,
+        items: prev.items,
+        selectedId: null,
+        dirty: true,
+      }
+    }),
+
+  redo: () =>
+    set((s) => {
+      const next = s.future[s.future.length - 1]
+      if (!next) return {}
+      return {
+        future: s.future.slice(0, -1),
+        past: [...s.past, { room: s.room, items: s.items }],
+        room: next.room,
+        items: next.items,
+        selectedId: null,
+        dirty: true,
+      }
+    }),
 
   loadDesign: (data, meta) =>
     set({
@@ -118,7 +168,10 @@ export const useBuilder = create<BuilderStore>((set, get) => ({
   setDealer: (d) => set({ dealer: d }),
   setDesignName: (n) => set({ designName: n, dirty: true }),
   setCustomer: (c) => set({ customer: c, dirty: true }),
-  setRoom: (w, h) => set({ room: { w, h }, dirty: true }),
+  setRoom: (w, h) => {
+    get().pushHistory()
+    set({ room: { w, h }, dirty: true })
+  },
 
   select: (id) => set({ selectedId: id }),
   hover: (id) => set({ hoverId: id }),
@@ -154,6 +207,7 @@ export const useBuilder = create<BuilderStore>((set, get) => ({
       item.x += snap.dx
       item.y += snap.dy
     }
+    get().pushHistory()
     set({ items: [...items, item], selectedId: item.id, dirty: true, placing: null })
     return item.id
   },
@@ -188,6 +242,12 @@ export const useBuilder = create<BuilderStore>((set, get) => ({
     })
   },
 
+  setItemPos: (id, x, y) =>
+    set((s) => ({
+      items: s.items.map((i) => (i.id === id ? { ...i, x, y } : i)),
+      dirty: true,
+    })),
+
   rotateItem: (id, delta) =>
     set((s) => ({
       items: s.items.map((i) => (i.id === id ? { ...i, rot: (((i.rot + delta) % 360) + 360) % 360 } : i)),
@@ -203,18 +263,35 @@ export const useBuilder = create<BuilderStore>((set, get) => ({
   setItemLabel: (id, label) =>
     set((s) => ({ items: s.items.map((i) => (i.id === id ? { ...i, label } : i)), dirty: true })),
 
-  removeItem: (id) =>
-    set((s) => ({ items: s.items.filter((i) => i.id !== id), selectedId: s.selectedId === id ? null : s.selectedId, dirty: true })),
+  swapProduct: (id, productId) => {
+    const { items, products } = get()
+    const p = products.find((x) => x.id === productId)
+    if (!p) return
+    get().pushHistory()
+    set({
+      items: items.map((i) => (i.id === id ? { ...i, productId: p.id, sku: p.sku } : i)),
+      dirty: true,
+    })
+  },
+
+  removeItem: (id) => {
+    get().pushHistory()
+    set((s) => ({ items: s.items.filter((i) => i.id !== id), selectedId: s.selectedId === id ? null : s.selectedId, dirty: true }))
+  },
 
   duplicateItem: (id) => {
     const { items } = get()
     const src = items.find((i) => i.id === id)
     if (!src) return
+    get().pushHistory()
     const copy: PlacedItem = { ...src, id: uid(), x: src.x + 0.5, y: src.y + 0.5 }
     set({ items: [...items, copy], selectedId: copy.id, dirty: true })
   },
 
-  clearAll: () => set({ items: [], selectedId: null, dirty: true }),
+  clearAll: () => {
+    get().pushHistory()
+    set({ items: [], selectedId: null, dirty: true })
+  },
 
   setView: (view) => set({ view }),
   setZoom: (zoom) => set({ zoom: Math.min(4, Math.max(0.25, zoom)) }),

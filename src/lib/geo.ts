@@ -34,19 +34,74 @@ export interface PartGeo {
 }
 
 export const CATEGORIES: { key: PartCategory; label: string; order: number }[] = [
-  { key: 'MACHINE', label: 'Machines (free layout aids)', order: 0 },
-  { key: 'UNIT', label: 'Dust collector units', order: 1 },
-  { key: 'PIPE', label: 'Straight pipes', order: 2 },
-  { key: 'BEND', label: 'Bends', order: 3 },
-  { key: 'YBRANCH', label: 'Y-branches', order: 4 },
-  { key: 'TBRANCH', label: 'T-branches', order: 5 },
-  { key: 'REDUCER', label: 'Reducers', order: 6 },
-  { key: 'GATE', label: 'Blast gates', order: 7 },
-  { key: 'HOOD', label: 'Machine hoods', order: 8 },
-  { key: 'FLEX', label: 'Flexible hoses', order: 9 },
-  { key: 'COUPLING', label: 'Couplings', order: 10 },
-  { key: 'CAP', label: 'End caps', order: 11 },
+  { key: 'MACHINE', label: 'Maschinen (Layout-Hilfen)', order: 0 },
+  { key: 'UNIT', label: 'Absauganlagen', order: 1 },
+  { key: 'PIPE', label: 'Rohre', order: 2 },
+  { key: 'BEND', label: 'Bögen', order: 3 },
+  { key: 'YBRANCH', label: 'Abzweiger', order: 4 },
+  { key: 'TBRANCH', label: 'Abzweiger', order: 5 },
+  { key: 'REDUCER', label: 'Reduzierungen', order: 6 },
+  { key: 'GATE', label: 'Absperrschieber', order: 7 },
+  { key: 'HOOD', label: 'Absaughauben', order: 8 },
+  { key: 'FLEX', label: 'Flexschläuche', order: 9 },
+  { key: 'COUPLING', label: 'Muffen', order: 10 },
+  { key: 'CAP', label: 'Endkappen', order: 11 },
 ]
+
+/**
+ * Palette groups shown in the left catalogue (order matches the approved
+ * design): Rohre · Bögen · Abzweiger · Reduzierungen · Absperrschieber ·
+ * Anschlüsse · Zubehör — plus the two product groups below the fold.
+ */
+export type PaletteGroup =
+  | 'PIPE'
+  | 'BEND'
+  | 'BRANCH'
+  | 'REDUCER'
+  | 'GATE'
+  | 'CONNECT'
+  | 'ACCESSORY'
+  | 'UNIT'
+  | '__machines'
+
+export const PALETTE_GROUPS: { key: PaletteGroup; label: string; order: number }[] = [
+  { key: 'PIPE', label: 'Rohre', order: 0 },
+  { key: 'BEND', label: 'Bögen', order: 1 },
+  { key: 'BRANCH', label: 'Abzweiger', order: 2 },
+  { key: 'REDUCER', label: 'Reduzierungen', order: 3 },
+  { key: 'GATE', label: 'Absperrschieber', order: 4 },
+  { key: 'CONNECT', label: 'Anschlüsse', order: 5 },
+  { key: 'ACCESSORY', label: 'Zubehör', order: 6 },
+  { key: 'UNIT', label: 'Absauganlagen', order: 7 },
+  { key: '__machines', label: 'Maschinen', order: 8 },
+]
+
+export function paletteGroup(category: string): PaletteGroup {
+  switch (category) {
+    case 'YBRANCH':
+    case 'TBRANCH':
+      return 'BRANCH'
+    case 'COUPLING':
+    case 'CAP':
+    case 'HOOD':
+      return 'CONNECT'
+    case 'FLEX':
+      return 'ACCESSORY'
+    default:
+      return (category as PaletteGroup) ?? 'PIPE'
+  }
+}
+
+export function paletteGroupLabel(g: string): string {
+  return PALETTE_GROUPS.find((x) => x.key === g)?.label ?? g
+}
+export function paletteGroupOrder(g: string): number {
+  return PALETTE_GROUPS.find((x) => x.key === g)?.order ?? 99
+}
+/** default part (Ø200 preferred) used by the toolbar quick-place tools */
+export function paletteGroupThumbGeo(): PartGeo {
+  return { category: 'PIPE', diameterMm: 200 }
+}
 
 export function categoryLabel(c: string): string {
   return CATEGORIES.find((x) => x.key === c)?.label ?? c
@@ -93,15 +148,15 @@ export interface MachineDef {
 }
 
 export const MACHINES: MachineDef[] = [
-  { type: 'table-saw', label: 'Table saw', w: 2.0, d: 1.2, drop: 160 },
-  { type: 'planer', label: 'Thickness planer', w: 1.6, d: 0.9, drop: 160 },
-  { type: 'jointer', label: 'Jointer', w: 2.2, d: 0.6, drop: 160 },
-  { type: 'bandsaw', label: 'Bandsaw', w: 0.9, d: 0.9, drop: 125 },
-  { type: 'edge-bander', label: 'Edge bander', w: 2.6, d: 0.8, drop: 125 },
-  { type: 'cnc', label: 'CNC router', w: 2.4, d: 2.2, drop: 200 },
-  { type: 'wide-belt', label: 'Wide-belt sander', w: 1.8, d: 1.4, drop: 200 },
-  { type: 'shaper', label: 'Shaper', w: 1.2, d: 1.0, drop: 125 },
-  { type: 'misc', label: 'Workshop machine', w: 1.5, d: 1.0, drop: 125 },
+  { type: 'table-saw', label: 'Formatkreissäge', w: 2.0, d: 1.2, drop: 160 },
+  { type: 'planer', label: 'Hobelmaschine', w: 1.6, d: 0.9, drop: 160 },
+  { type: 'jointer', label: 'Abrichthobel', w: 2.2, d: 0.6, drop: 160 },
+  { type: 'bandsaw', label: 'Bandsäge', w: 0.9, d: 0.9, drop: 125 },
+  { type: 'edge-bander', label: 'Kantenanleimer', w: 2.6, d: 0.8, drop: 125 },
+  { type: 'cnc', label: 'CNC', w: 2.4, d: 2.2, drop: 200 },
+  { type: 'wide-belt', label: 'Breitbandschleifer', w: 1.8, d: 1.4, drop: 200 },
+  { type: 'shaper', label: 'Fräsmaschine', w: 1.2, d: 1.0, drop: 125 },
+  { type: 'misc', label: 'Werkstattmaschine', w: 1.5, d: 1.0, drop: 125 },
 ]
 
 export function machineDef(type: string): MachineDef {

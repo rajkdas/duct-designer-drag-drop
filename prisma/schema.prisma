@@ -37,7 +37,7 @@ model Dealer {
   name         String
   contactEmail String?
   monthlyFee   Float    @default(49)
-  brandColor   String   @default("#ea580c")
+  brandColor   String   @default("#0b33d5")
   status       String   @default("ACTIVE") // ACTIVE | TRIAL | SUSPENDED
   notes        String?
   createdAt    DateTime @default(now())
@@ -84,7 +84,7 @@ model Settings {
   tagline      String   @default("Dust extraction systems for professional workshops")
   currency     String   @default("EUR")
   vatRate      Float    @default(19)
-  brandColor   String   @default("#ea580c")
+  brandColor   String   @default("#0b33d5")
   contactEmail String   @default("sales@example.com")
   updatedAt    DateTime @updatedAt
 }

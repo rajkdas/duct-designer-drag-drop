@@ -67,7 +67,7 @@ export function ShareView({ shareId }: { shareId: string }) {
       <div className="flex min-h-dvh items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3 text-slate-400">
           <Fan className="h-8 w-8 animate-spin" style={{ animationDuration: '2.5s' }} />
-          <p className="text-sm font-medium">Loading shared design…</p>
+          <p className="text-sm font-medium">Geteiltes Design wird geladen…</p>
         </div>
       </div>
     )
@@ -76,10 +76,10 @@ export function ShareView({ shareId }: { shareId: string }) {
   if (state === 'missing') {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center bg-slate-50 p-6 text-center">
-        <h1 className="text-xl font-bold text-slate-800">Design not found</h1>
-        <p className="mt-2 max-w-sm text-sm text-slate-500">This share link is invalid or the design was removed. Ask the sender for a fresh link.</p>
+        <h1 className="text-xl font-bold text-slate-800">Design nicht gefunden</h1>
+        <p className="mt-2 max-w-sm text-sm text-slate-500">Dieser Teilen-Link ist ungültig oder das Design wurde entfernt. Bitten Sie den Absender um einen neuen Link.</p>
         <Button className="mt-4" onClick={() => (window.location.href = '/?app=builder')}>
-          <PencilRuler className="mr-2 h-4 w-4" /> Start your own layout
+          <PencilRuler className="mr-2 h-4 w-4" /> Eigenes Layout starten
         </Button>
       </div>
     )
@@ -94,21 +94,21 @@ export function ShareView({ shareId }: { shareId: string }) {
           </div>
           <div className="leading-tight">
             <p className="text-sm font-bold text-slate-800">{dealerLabel ?? settings.shopName}</p>
-            <p className="text-[10px] text-slate-400">Shared dust-extraction layout</p>
+            <p className="text-[10px] text-slate-400">Geteiltes Absaug-Layout</p>
           </div>
         </div>
         <div className="min-w-0 flex-1 truncate text-center">
           <p className="truncate text-sm font-semibold text-slate-800">{designName}</p>
-          {customer && <p className="truncate text-[11px] text-slate-400">for {customer}</p>}
+          {customer && <p className="truncate text-[11px] text-slate-400">für {customer}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <a href={`/?app=builder&design=${shareId}`}>
             <Button variant="outline" size="sm">
-              <PencilRuler className="mr-1.5 h-3.5 w-3.5" /> Open in planner
+              <PencilRuler className="mr-1.5 h-3.5 w-3.5" /> Im Planer öffnen
             </Button>
           </a>
           <Button size="sm" className="text-white" style={{ background: 'var(--brand)' }} onClick={() => setQuoteOpen(true)}>
-            <Send className="mr-1.5 h-3.5 w-3.5" /> Request quote
+            <Send className="mr-1.5 h-3.5 w-3.5" /> Angebot anfordern
           </Button>
         </div>
       </header>
@@ -120,22 +120,22 @@ export function ShareView({ shareId }: { shareId: string }) {
             <Tabs value={mode} onValueChange={(v) => setMode(v as 'plan' | 'iso')}>
               <TabsList className="h-8">
                 <TabsTrigger value="plan" className="h-6 px-3 text-xs">
-                  Plan view
+                  2D – Grundriss
                 </TabsTrigger>
                 <TabsTrigger value="iso" className="h-6 px-3 text-xs">
-                  3D view
+                  3D – Ansicht
                 </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
         </section>
         <aside className="flex max-h-[70vh] min-h-[320px] w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:max-h-none lg:w-[420px]">
-          <BomPanel onQuote={() => setQuoteOpen(true)} />
+          <BomPanel onQuote={() => setQuoteOpen(true)} readOnly side />
         </aside>
       </main>
 
       <footer className="border-t border-slate-200 bg-white px-4 py-2 text-center text-[11px] text-slate-400">
-        Prices are live from the {settings.shopName} catalogue and were refreshed when you opened this link.
+        Preise kommen live aus dem Katalog von {settings.shopName} und wurden beim Öffnen dieses Links aktualisiert.
       </footer>
 
       <QuoteDialog open={quoteOpen} onOpenChange={setQuoteOpen} />

@@ -35,8 +35,15 @@ export function DealersPanel() {
   }, [])
 
   useEffect(() => {
-    load()
-  }, [load])
+    let cancelled = false
+    ;(async () => {
+      const r = await fetch('/api/dealers')
+      if (!cancelled && r.ok) setDealers(await r.json())
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const save = async () => {
     setBusy(true)

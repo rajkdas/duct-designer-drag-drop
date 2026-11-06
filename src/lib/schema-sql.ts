@@ -31,7 +31,7 @@ export const SCHEMA_STATEMENTS: string[] = [
     "name" TEXT NOT NULL,
     "contactEmail" TEXT,
     "monthlyFee" REAL NOT NULL DEFAULT 49,
-    "brandColor" TEXT NOT NULL DEFAULT '#ea580c',
+    "brandColor" TEXT NOT NULL DEFAULT '#0b33d5',
     "status" TEXT NOT NULL DEFAULT 'ACTIVE',
     "notes" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -72,7 +72,7 @@ export const SCHEMA_STATEMENTS: string[] = [
     "tagline" TEXT NOT NULL DEFAULT 'Dust extraction systems for professional workshops',
     "currency" TEXT NOT NULL DEFAULT 'EUR',
     "vatRate" REAL NOT NULL DEFAULT 19,
-    "brandColor" TEXT NOT NULL DEFAULT '#ea580c',
+    "brandColor" TEXT NOT NULL DEFAULT '#0b33d5',
     "contactEmail" TEXT NOT NULL DEFAULT 'sales@example.com',
     "updatedAt" DATETIME NOT NULL
 )`,

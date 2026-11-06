@@ -14,15 +14,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BIMA DuctDesigner — Dust extraction layout planner",
+  title: "BIMA DuctDesigner — Absauganlagen planen",
   description:
-    "Plan dust extraction systems in the browser: drag & drop pipes and fittings, get a live priced bill of materials, request a quote or share the design with any dealer.",
+    "Absauganlagen direkt im Browser planen: Rohre und Formteile per Drag & Drop platzieren, live kalkulierte Stückliste erhalten, Angebot anfordern oder Plan mit jedem Händler teilen.",
   keywords: ["dust extraction", "duct design", "woodworking", "configurator", "Späneabsaugung", "Rohrplaner"],
   // Favicon comes from the App Router file conventions:
   //   src/app/favicon.ico · src/app/icon.svg · src/app/apple-icon.png
   openGraph: {
     title: "BIMA DuctDesigner",
-    description: "Drag & drop duct planner with live priced bill of materials",
+    description: "Absauganlagen planen · visualisieren · konfigurieren — mit live kalkulierter Stückliste",
     siteName: "BIMA DuctDesigner",
     type: "website",
   },
@@ -41,7 +41,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="de" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
